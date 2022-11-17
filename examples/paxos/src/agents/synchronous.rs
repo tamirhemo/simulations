@@ -2,9 +2,9 @@ use super::*;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::time::Duration;
-use system::mpsc::crossbeam::AgentCB;
-use system::mpsc::system::System;
-use system::mpsc::{Agent, Internal};
+use system::synchronous::crossbeam::AgentCB;
+use system::synchronous::system::System;
+use system::synchronous::{Agent, Internal};
 use system_derive::Internal;
 
 use super::{acceptor, learner, proposer};

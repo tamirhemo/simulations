@@ -1,4 +1,4 @@
-use crate::mpsc::{agent, channel};
+use super::{agent, channel};
 use channel::*;
 use crossbeam_channel as cb;
 use std::collections::HashMap;

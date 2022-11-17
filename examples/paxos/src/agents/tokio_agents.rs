@@ -3,7 +3,7 @@ use std::hash::Hash;
 use std::time::Duration;
 use system::tokio::sync::{AgentType, SyncAgent, SyncSystem};
 
-use super::mpsc::AgentInternal;
+use super::synchronous::AgentInternal;
 use super::*;
 use super::{acceptor, learner, proposer};
 use acceptor::AcceptorInternal;

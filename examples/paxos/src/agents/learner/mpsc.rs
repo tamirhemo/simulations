@@ -3,7 +3,7 @@ use crate::agents::*;
 use core::panic;
 use std::hash::Hash;
 use std::{collections::VecDeque, fmt::Debug};
-use system::mpsc::{AgentCB, InChannel, Instruction, Internal};
+use system::synchronous::{AgentCB, InChannel, Instruction, Internal};
 
 pub type Learner<T> = AgentCB<LearnerInternal<T>, AgentID, Message<T>>;
 type Queue<T> = VecDeque<Instruction<AgentID, Message<T>>>;

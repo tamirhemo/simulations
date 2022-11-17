@@ -1,5 +1,5 @@
 use super::interface::*;
-use crate::mpsc::channel::{ChannelError, InChannel, OutChannels};
+use super::channel::{ChannelError, InChannel, OutChannels};
 use std::time::Duration;
 
 /// A container for an agent.

@@ -1,4 +1,3 @@
-use crate::mpsc::Instruction;
 use std::marker::PhantomData;
 
 use super::channel::{Channels, SendError};

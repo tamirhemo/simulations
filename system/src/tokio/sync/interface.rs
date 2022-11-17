@@ -1,5 +1,4 @@
 use super::internal::*;
-use crate::mpsc::Instruction;
 use std::fmt::Debug;
 use tokio;
 use tokio::sync::mpsc;

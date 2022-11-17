@@ -4,7 +4,7 @@ use std::hash::Hash;
 
 pub mod acceptor;
 pub mod learner;
-pub mod mpsc;
+pub mod synchronous;
 pub mod proposer;
 pub mod tokio_agents;
 

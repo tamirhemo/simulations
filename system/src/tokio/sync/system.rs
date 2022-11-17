@@ -2,7 +2,6 @@ use super::agent::*;
 use super::channel::Channels;
 use super::interface::{AgentType, Interface};
 use super::internal::*;
-use crate::mpsc::Instruction;
 use std::collections::{HashMap, HashSet};
 use tokio;
 use tokio::sync::mpsc;

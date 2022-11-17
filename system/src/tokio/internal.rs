@@ -1,29 +1,11 @@
-use crate::mpsc::{Instruction, Internal};
+use crate::synchronous;
 use std::collections::VecDeque;
 use std::time::Duration;
 use tokio::sync::mpsc;
 
-/*
-/// Instructions an agent internal system can output to its channel interface
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Instruction<K, T> {
-    Send(K, T),
-    Terminate(T),
-    Get,
-    GetTimeout(Duration),
-}
 
-impl<K, T> From<mpsc::Instruction<K, T>> for Instruction<K, T> {
-    fn from(command: mpsc::Instruction<K,T>) -> Self {
-        match command {
-            mpsc::Instruction::Send(k, msg) => Instruction::Send(k, msg),
-            mpsc::Instruction::Get => Instruction::Get,
-            mpsc::Instruction::GetTimeout(t) => Instruction::GetTimeout(t),
-            mpsc::Instruction::Terminate(msg) => Instruction::Terminate(msg),
-        }
-    }
-}
-*/
+pub type Instruction<K, T> = synchronous::Instruction<K, T>;
+
 /// An interface for the internal operation of an agent.
 ///
 /// An internal interface should contain the agent's local variables and the logic of the
@@ -129,7 +111,7 @@ where
 
 
 impl<T> SyncInternalQueue for T
-where T: Internal,
+where T: synchronous::Internal,
       T::Queue : InstructionQueue<Instruction = Instruction<T::Key, T::Message>> {
     type Message = T::Message;
     type Key= T::Key;

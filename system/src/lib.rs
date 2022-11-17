@@ -3,5 +3,5 @@
 //!
 //!
 
-pub mod mpsc;
+pub mod synchronous;
 pub mod tokio;

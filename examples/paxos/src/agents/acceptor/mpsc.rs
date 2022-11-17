@@ -1,7 +1,7 @@
 use crate::agents::acceptor::AcceptorInternal;
 use crate::agents::*;
 use std::{collections::VecDeque, fmt::Debug};
-use system::mpsc::{AgentCB, InChannel, Instruction, Internal, OutChannels};
+use system::synchronous::{AgentCB, InChannel, Instruction, Internal, OutChannels};
 
 pub type Acceptor<T> = AgentCB<AcceptorInternal<T>, AgentID, Message<T>>;
 

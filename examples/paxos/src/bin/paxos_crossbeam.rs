@@ -1,4 +1,4 @@
-use paxos::agents::mpsc::setup_paxos;
+use paxos::agents::synchronous::setup_paxos;
 use paxos::agents::*;
 use std::time::Duration;
 
