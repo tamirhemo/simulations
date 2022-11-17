@@ -10,8 +10,9 @@ use acceptor::AcceptorInternal;
 use learner::LearnerInternal;
 use proposer::ProposerInternal;
 
-
 /// Paxos implemented in tokio
+/// 
+/// 
 pub type PaxosAgent<T> = SyncAgent<AgentInternal<T>, AgentID, Message<T>>;
 pub type PaxosSystem<T> = SyncSystem<AgentInternal<T>, AgentID, Message<T>>;
 
