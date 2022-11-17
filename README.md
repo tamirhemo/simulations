@@ -4,7 +4,7 @@ This projects aims to implement some known distributed systems algorithms and va
 
 The project is still in very preliminary stages and the code might change substantially. Currently we only have an implementation of the Paxos alogirthm that was not tested extensively. 
 
-The hope is to make a useful interace to generate simulations and tests automatically. 
+The hope is to make a useful interace to generate simulations and tests automatically, generate testable traces and timelines. 
 
 Comments welcome!
 
