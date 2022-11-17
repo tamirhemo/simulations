@@ -6,6 +6,6 @@ Setting up the initial conditions is relatively simple using the system api and 
 
 Currently, two possible backends for implementation are available, one based on crossbeam_channel and one using the asynchronous tokio runtime. 
 
-See [paxos](../examples/paxos/) for an example.
+See [`paxos`](../examples/paxos/) for an example.
 
 
