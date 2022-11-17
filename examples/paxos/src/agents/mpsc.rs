@@ -23,7 +23,7 @@ where
 }
 
 impl<T: Clone + Eq + Hash + Debug> AgentInternal<T> {
-    fn id(&self) -> AgentID {
+    pub fn id(&self) -> AgentID {
         match self {
             AgentInternal::Learner(internal) => internal.id,
             AgentInternal::Proposer(internal) => internal.id,

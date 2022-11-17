@@ -3,10 +3,19 @@ use proc_macro2;
 use quote::quote;
 use syn;
 
-// Needs work, leave it here for now
+
+pub fn impl_internal(ast: &syn::DeriveInput) -> TokenStream {
+    let trait_name = quote!(Internal);
+    impl_function(ast, trait_name)
+}
+
+pub fn impl_sync_internal_queue(ast: &syn::DeriveInput) -> TokenStream {
+    let trait_name = quote!(SyncInternalQueue);
+    impl_function(ast, trait_name)
+}
 
 /// Assumes Message, Key, Channel are joint for all enum variants
-pub fn impl_internal(ast: &syn::DeriveInput) -> TokenStream {
+pub fn impl_function(ast: &syn::DeriveInput, trait_name : proc_macro2::TokenStream) -> TokenStream {
     let name = &ast.ident;
 
     let generics = &ast.generics.params;
@@ -40,7 +49,7 @@ pub fn impl_internal(ast: &syn::DeriveInput) -> TokenStream {
     trypl.extend(vec![quote!(let x :u32 = 5; )]);
 
     let gen = quote! {
-        impl<#generics> Internal for AgentInternal<#generics>
+        impl<#generics> #trait_name for AgentInternal<#generics>
         #where_clause {
             type Message = <#first_field as Internal>::Message;
             type Key = <#first_field as Internal>::Key;
