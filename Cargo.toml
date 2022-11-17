@@ -1,0 +1,9 @@
+
+
+[workspace]
+members = [
+    "system",
+    "system/system_derive",
+    "examples/paxos",
+]
+
