@@ -4,7 +4,7 @@ An interace to generate simulations of distributed systems realized as a set of 
 
 Setting up the initial conditions is relatively simple using the system api and does not require any involvement in the inner workings. 
 
-Currently, two possible backends for implementation are available, one based on crossbeam_channel and one using the asynchronous tokio runtime. 
+Currently, two possible backends for implementation are available, one based on [`crossbeam_channel`](https://docs.rs/crossbeam-channel/latest/crossbeam_channel/) and one using the asynchronous [`tokio runtime`](https://tokio.rs). 
 
 See [`paxos`](../examples/paxos/) for an example.
 
