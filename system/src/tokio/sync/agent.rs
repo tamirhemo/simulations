@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use super::channel::{Channels, SendError};
 use super::interface::*;
-use super::internal::*;
+use crate::internal::*;
 use std::fmt::Debug;
 use std::hash::Hash;
 use tokio;
@@ -49,7 +49,7 @@ where
         internal_buffer: usize,
     ) -> (Self, Interface<I, Option<T>, Instruction<K, T>>)
     where
-        I: SyncInternalQueue<Key = K, Message = T> + Send + Debug + 'static,
+        I: Internal<Key = K, Message = T> + Send + Debug + 'static,
         T: Send + Debug + 'static,
         K: Send + Debug + 'static,
         I::Error: Debug + Send + 'static,
@@ -72,7 +72,7 @@ where
         command: Instruction<K, T>,
     ) -> Result<Option<T>, AgentError<I::Error, Instruction<I::Key, I::Message>, I::Message>>
     where
-        I: SyncInternalQueue<Key = K, Message = T> + Send + Debug + 'static,
+        I: Internal<Key = K, Message = T> + Send + Debug + 'static,
         I::Error: Send + Debug + 'static,
     {
         match command {
@@ -101,7 +101,7 @@ where
         termination: Option<mpsc::Sender<T>>,
     ) -> Result<(), AgentError<I::Error, Instruction<I::Key, I::Message>, I::Message>>
     where
-        I: SyncInternalQueue<Key = K, Message = T> + Send + Debug + 'static,
+        I: Internal<Key = K, Message = T> + Send + Debug + 'static,
         I::Error: Send + Debug + 'static,
     {
         while let Some(command) = self.rx_inst.recv().await {

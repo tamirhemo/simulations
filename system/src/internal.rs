@@ -5,9 +5,10 @@ use std::time::Duration;
 ///  
 /// This describes the agent's interaction with the outside world. Namely, an agent can send the 
 /// commands: 
-/// * [`Instruction::Send(key, message)`] -  a message of type [`T`] along a channel identified by a key of type ['K'].
-/// * [`Instruction::Terminate(message)`], returning a termination message to be collected by the system.
-/// * 
+/// * `Send(key, message)` -  a message of type `T` along a channel identified by a key of type `K`.
+/// * `Terminate(message)` - returning a termination message to be collected by the system.
+/// * `Get` - wait for a message, being idle in the meantime.
+/// * 'GetTimeout(timeout)' - wait for a message, but only up for the duration of timeout.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Instruction<K, T> {
     Send(K, T),

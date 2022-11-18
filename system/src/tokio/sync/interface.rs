@@ -1,4 +1,4 @@
-use super::internal::*;
+use crate::internal::*;
 use std::fmt::Debug;
 use tokio;
 use tokio::sync::mpsc;
@@ -19,7 +19,7 @@ pub enum Interface<I, T, M> {
 
 impl<I, K, T> Interface<I, Option<T>, Instruction<K, T>>
 where
-    I: SyncInternalQueue<Key = K, Message = T> + Send + Debug + 'static,
+    I: Internal<Key = K, Message = T> + Send + Debug + 'static,
     T: Send + Debug + 'static,
     K: Send + Debug + 'static,
     I::Error: Debug + Send + 'static,
@@ -68,8 +68,8 @@ pub struct Core<I, T, M> {
 }
 
 pub type SyncCoreError<I> = CoreError<
-    <I as SyncInternal>::Error,
-    Instruction<<I as SyncInternal>::Key, <I as SyncInternalQueue>::Message>,
+    <I as Internal>::Error,
+    Instruction<<I as Internal>::Key, <I as Internal>::Message>,
 >;
 
 #[derive(Debug, Clone)]
@@ -92,7 +92,7 @@ impl<E, Q> CoreError<E, Q> {
 
 impl<I, K, T, E> LightCore<I, Option<T>, Instruction<K, T>>
 where
-    I: SyncInternalQueue<Key = K, Message = T, Error = E> + Send + Debug + 'static,
+    I: Internal<Key = K, Message = T, Error = E> + Send + Debug + 'static,
     T: Send + Debug + 'static,
     K: Send + Debug + 'static,
     E: Send + Debug + 'static,
@@ -147,7 +147,7 @@ where
 
 impl<I, K, T, E> Core<I, Option<T>, Instruction<K, T>>
 where
-    I: SyncInternalQueue<Key = K, Message = T, Error = E> + Send + Debug + 'static,
+    I: Internal<Key = K, Message = T, Error = E> + Send + Debug + 'static,
     T: Send + Debug + 'static,
     K: Send + Debug + 'static,
     E: Send + Debug + 'static,

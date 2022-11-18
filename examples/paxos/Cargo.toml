@@ -11,4 +11,3 @@ tokio = { version = "1", features = ["full"] }
 crossbeam-channel = "0.5"
 system = { path = "../../system" }
 system_derive = { path = "../../system/system_derive" }
-rayon = "1.5"

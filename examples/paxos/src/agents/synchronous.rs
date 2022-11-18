@@ -4,7 +4,8 @@ use std::hash::Hash;
 use std::time::Duration;
 use system::synchronous::crossbeam::AgentCB;
 use system::synchronous::system::System;
-use system::synchronous::{Agent, Internal};
+use system::synchronous::Agent;
+use system::internal::Internal;
 use system_derive::Internal;
 
 use super::{acceptor, learner, proposer};

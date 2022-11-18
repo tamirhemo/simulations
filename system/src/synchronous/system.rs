@@ -1,6 +1,6 @@
 use super::agent::Agent;
 use super::channel::{InChannel, OutChannels};
-use super::interface::Internal;
+use crate::internal::Internal;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt::Debug;

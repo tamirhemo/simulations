@@ -1,7 +1,7 @@
-use super::{agent::*, internal};
+use super::agent::*;
 use super::channel::Channels;
 use super::interface::{AgentType, Interface};
-use super::internal::*;
+use crate::internal::*;
 use std::collections::{HashMap, HashSet};
 use tokio;
 use tokio::sync::mpsc;
@@ -30,11 +30,11 @@ pub type SyncSystem<I, K, T> = GeneralSystem<
     T,
 >;
 
-pub type System<I> = SyncSystem<I, <I as SyncInternalQueue>::Key, <I as SyncInternalQueue>::Message>;
+pub type System<I> = SyncSystem<I, <I as Internal>::Key, <I as Internal>::Message>;
 
 impl<I, K, T> SyncSystem<I, K, T>
 where
-    I: SyncInternalQueue<Key = K, Message = T> + Send + Debug + 'static,
+    I: Internal<Key = K, Message = T> + Send + Debug + 'static,
     K: Send + Debug + Eq + Hash + Copy + 'static,
     I::Error: Send + Debug + 'static,
     T: Send + Debug + 'static,

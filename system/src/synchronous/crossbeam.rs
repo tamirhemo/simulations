@@ -1,4 +1,4 @@
-use super::interface::Internal;
+use crate::internal::Internal;
 use super::system;
 use super::{agent, channel};
 use channel::*;

@@ -9,11 +9,9 @@
 pub mod agent;
 pub mod channel;
 pub mod crossbeam;
-pub mod interface;
 mod standard;
 pub mod system;
 
 pub use agent::Agent;
 pub use channel::{InChannel, OutChannels};
 pub use crossbeam::AgentCB;
-pub use interface::{Instruction, InstructionQueue, Internal};

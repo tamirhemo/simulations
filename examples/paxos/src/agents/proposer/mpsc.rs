@@ -2,7 +2,8 @@ use crate::agents::proposer::ProposerInternal;
 use crate::agents::*;
 use rand::prelude::*;
 use std::{collections::VecDeque, fmt::Debug};
-use system::synchronous::{AgentCB, InChannel, Instruction, Internal, OutChannels};
+use system::internal::{Instruction, Internal};
+use system::synchronous::{AgentCB, InChannel, OutChannels};
 
 type Queue<T> = VecDeque<Instruction<AgentID, Message<T>>>;
 
