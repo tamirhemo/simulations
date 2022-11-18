@@ -55,7 +55,7 @@ where
         &mut self,
         key: K,
         internal: I,
-        terminal: bool,
+        //terminal: bool,
         kind: AgentType,
         buffer: usize,
         internal_buffer: usize,
@@ -66,10 +66,6 @@ where
 
         self.agents.insert(key, agent);
         self.interfaces.insert(key, interface);
-
-        if terminal {
-            self.terminals.insert(key);
-        }
     }
 
     pub fn add_channel(&mut self, sender: &K, reciever: &K)
@@ -100,7 +96,6 @@ where
     pub async fn run(mut self) -> Result<Vec<T>, SystemError> {
         let mut interfaces = self.interfaces.into_iter();
         let mut agents = self.agents.into_iter();
-        //let mut join_terminals = JoinSet::new();
 
         // Spawn threads for interfaces
         while let Some((_, interface)) = interfaces.next() {
@@ -134,7 +129,6 @@ where
         let mut counter = 0;
 
         while let Some(msg) = self.rx_term.recv().await {
-            //println!("got value");
             terminal_values.push(msg);
             counter += 1;
             if counter >= terminals_size {

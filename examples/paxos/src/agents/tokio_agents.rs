@@ -35,7 +35,6 @@ where
         system.add_agent(
             internal.id(),
             internal,
-            false,
             kind,
             buffer,
             internal_buffer,
@@ -48,7 +47,8 @@ where
         let internal = AgentInternal::Learner(LearnerInternal::new(i));
         let id = internal.id();
         system.terminals.insert(id);
-        system.add_agent(id, internal, true, kind, buffer, internal_buffer);
+        system.add_agent(id, internal, kind, buffer, internal_buffer);
+        system.add_terminal(id);
         for j in 0..n_acceptors {
             system.add_channel(&AgentID::Acceptor(j), &id);
         }
@@ -59,7 +59,7 @@ where
     for (i, (val, range, timeout)) in proposer_initial_values.into_iter().enumerate() {
         let internal = AgentInternal::Proposer(ProposerInternal::new(i, val, range, timeout));
         let id = internal.id();
-        system.add_agent(id, internal, false, kind, buffer, internal_buffer);
+        system.add_agent(id, internal, kind, buffer, internal_buffer);
         for j in 0..n_acceptors {
             //if j > n_acceptors/2 {break};
             system.add_channel(&AgentID::Acceptor(j), &id);

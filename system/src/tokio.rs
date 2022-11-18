@@ -1,6 +1,7 @@
-//! An interface for implementing asyncronous message-passing systems using the tokio runtime.
+//! Implementation using the [tokio](https://tokio.rs) runtime. 
+//! 
 //!
-//!
+//! 
 //!
 
 pub mod net;

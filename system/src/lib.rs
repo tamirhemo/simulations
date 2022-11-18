@@ -6,11 +6,16 @@
 //! The internal logic of an agent is expressed by implementing the [`Internal`] trait. 
 //!
 //! 
+//! # Example
+//! ffff
+//! 
 //!
 
+pub mod internal;
 pub mod synchronous;
 pub mod tokio;
-pub mod internal;
+
 
 pub use internal::{Internal, Instruction};
+
 

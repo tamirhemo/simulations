@@ -22,7 +22,7 @@ fn setup(n: usize) -> Cycle {
 
 #[test]
 fn test_sync_cycle() {
-    let n = 3;
+    let n = 100;
     let cycle = setup(n);
 
     let values = cycle.run().unwrap();

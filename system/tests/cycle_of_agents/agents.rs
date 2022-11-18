@@ -1,8 +1,11 @@
 // An integration test for the message passing system
 
+// 
+
 use std::collections::VecDeque;
 use system::{Instruction, Internal};
 
+#[derive(Debug)]
 pub struct CycleInternal {
     input_key: Option<usize>,
     output_key: Option<usize>,
