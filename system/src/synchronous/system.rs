@@ -58,6 +58,12 @@ where
             .and_modify(|a| a.internal.new_incoming_key(&sender));
     }
 
+    pub fn add_terminal(&mut self, key: K)
+    where
+    K: Eq + Hash + Copy, {
+        self.terminals.insert(key);
+    }
+
     pub fn run(self) -> Result<HashMap<K, T>, Box<dyn Error + Send + 'static>>
     where
         I: Send + 'static,

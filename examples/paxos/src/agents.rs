@@ -4,8 +4,8 @@ use std::hash::Hash;
 
 pub mod acceptor;
 pub mod learner;
-pub mod synchronous;
 pub mod proposer;
+pub mod synchronous;
 pub mod tokio_agents;
 
 pub type TimeStamp = u32;

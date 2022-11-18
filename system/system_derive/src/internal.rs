@@ -3,7 +3,6 @@ use proc_macro2;
 use quote::quote;
 use syn;
 
-
 pub fn impl_internal(ast: &syn::DeriveInput) -> TokenStream {
     let trait_name = quote!(Internal);
     impl_function(ast, trait_name)
@@ -15,7 +14,7 @@ pub fn impl_sync_internal_queue(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 /// Assumes Message, Key, Channel are joint for all enum variants
-pub fn impl_function(ast: &syn::DeriveInput, trait_name : proc_macro2::TokenStream) -> TokenStream {
+pub fn impl_function(ast: &syn::DeriveInput, trait_name: proc_macro2::TokenStream) -> TokenStream {
     let name = &ast.ident;
 
     let generics = &ast.generics.params;

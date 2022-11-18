@@ -1,3 +1,5 @@
+use super::interface::Internal;
+use super::system;
 use super::{agent, channel};
 use channel::*;
 use crossbeam_channel as cb;
@@ -7,6 +9,12 @@ use std::hash::Hash;
 
 type Channel<T> = (cb::Sender<T>, cb::Receiver<T>);
 pub type AgentCB<I, K, T> = agent::Agent<I, OutChannelsCB<K, T>, Channel<T>>;
+
+pub type System<I> = system::System<
+    <I as Internal>::Key,
+    AgentCB<I, <I as Internal>::Key, <I as Internal>::Message>,
+>;
+
 #[derive(Debug, Clone)]
 pub struct OutChannelsCB<K, T> {
     pub ch_map: HashMap<K, cb::Sender<T>>,

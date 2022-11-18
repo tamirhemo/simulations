@@ -3,7 +3,6 @@ use std::collections::VecDeque;
 use std::time::Duration;
 use tokio::sync::mpsc;
 
-
 pub type Instruction<K, T> = synchronous::Instruction<K, T>;
 
 /// An interface for the internal operation of an agent.
@@ -108,14 +107,14 @@ where
     }
 }
 
-
-
 impl<T> SyncInternalQueue for T
-where T: synchronous::Internal,
-      T::Queue : InstructionQueue<Instruction = Instruction<T::Key, T::Message>> {
+where
+    T: synchronous::Internal,
+    T::Queue: InstructionQueue<Instruction = Instruction<T::Key, T::Message>>,
+{
     type Message = T::Message;
-    type Key= T::Key;
-    type Error=T::Error;
+    type Key = T::Key;
+    type Error = T::Error;
     type Queue = T::Queue;
 
     fn new_incoming_key(&mut self, key: &Self::Key) {
@@ -132,6 +131,4 @@ where T: synchronous::Internal,
     fn process_message(&mut self, message: Option<Self::Message>) -> Self::Queue {
         self.process_message(message)
     }
-
 }
-

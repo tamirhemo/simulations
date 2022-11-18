@@ -89,6 +89,12 @@ where
             .and_modify(|interface| interface.new_incoming_key(&sender));
     }
 
+    pub fn add_terminal(&mut self, key: K)
+    where
+    K: Eq + Hash + Copy, {
+        self.terminals.insert(key);
+    }
+
     pub async fn run(mut self) -> Result<Vec<T>, SystemError> {
         let mut interfaces = self.interfaces.into_iter();
         let mut agents = self.agents.into_iter();
@@ -106,9 +112,7 @@ where
                     });
                 }
                 Interface::Heavy(mut core) => {
-                    std::thread::spawn(move || {
-                        core.run().ok()
-                    });
+                    std::thread::spawn(move || core.run().ok());
                 }
             }
         }

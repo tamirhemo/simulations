@@ -3,7 +3,6 @@ use syn;
 
 mod internal;
 
-
 #[proc_macro_derive(Internal)]
 pub fn internal_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
