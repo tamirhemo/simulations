@@ -43,7 +43,7 @@ pub trait Internal {
     type Error;
     type Queue: InstructionQueue<Instruction = Instruction<Self::Key, Self::Message>>;
 
-    /// Get an incoming channel from the system to an agent with identifier given by [`key`]. 
+    /// Get an incoming channel from the system to an agent with identifier given by Key. 
     /// 
     /// An agent may or may not wish to save incoming keys in its local memory in 
     /// order to be able to make sending instructions to the channel.

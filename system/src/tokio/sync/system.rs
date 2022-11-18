@@ -55,7 +55,6 @@ where
         &mut self,
         key: K,
         internal: I,
-        //terminal: bool,
         kind: AgentType,
         buffer: usize,
         internal_buffer: usize,

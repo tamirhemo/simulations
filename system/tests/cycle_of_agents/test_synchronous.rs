@@ -5,7 +5,7 @@ use system::synchronous::crossbeam;
 pub type Cycle = crossbeam::System<CycleInternal>;
 
 fn setup(n: usize) -> Cycle {
-    let mut cycle = Cycle::new();
+    let mut cycle = crossbeam::System::new();
 
     cycle.add_agent(0, CycleInternal::new(true));
 
