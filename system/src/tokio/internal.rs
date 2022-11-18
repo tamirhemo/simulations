@@ -1,16 +1,10 @@
 use crate::synchronous;
 use std::collections::VecDeque;
-use std::time::Duration;
 use tokio::sync::mpsc;
 
 pub type Instruction<K, T> = synchronous::Instruction<K, T>;
 
-/// An interface for the internal operation of an agent.
-///
-/// An internal interface should contain the agent's local variables and the logic of the
-/// agent's operation. The internal system interacts with external interfaces by sending
-/// instructions and recieving messages, in this case through a channel.
-///
+
 pub trait SyncInternal {
     type Message;
     type Key;

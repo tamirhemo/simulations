@@ -72,22 +72,22 @@ where
         }
     }
 
-    pub fn add_channel(&mut self, sender: K, reciever: K)
+    pub fn add_channel(&mut self, sender: &K, reciever: &K)
     where
         K: Eq + Hash + Copy,
     {
         let tx = self.agents.get(&reciever).unwrap().channels.tx();
 
-        self.agents.entry(sender).and_modify(|agent| {
-            agent.channels.insert(reciever, tx);
+        self.agents.entry(*sender).and_modify(|agent| {
+            agent.channels.insert(*reciever, tx);
         });
 
-        self.interfaces.entry(sender).and_modify(|interface| {
+        self.interfaces.entry(*sender).and_modify(|interface| {
             interface.new_outgoing_key(&reciever);
         });
 
         self.interfaces
-            .entry(reciever)
+            .entry(*reciever)
             .and_modify(|interface| interface.new_incoming_key(&sender));
     }
 

@@ -11,10 +11,10 @@ fn setup(n: usize) -> Cycle {
 
     for i in 1..n {
         cycle.add_agent(i, CycleInternal::new(false));
-        cycle.add_channel(i-1, i);
+        cycle.add_channel(&(i-1), &i);
     }
 
-    cycle.add_channel(n-1, 0);
+    cycle.add_channel(&(n-1), &0);
     cycle.add_terminal(0);
 
     cycle

@@ -42,19 +42,19 @@ where
         self.agents.insert(key, Agent::new(internal));
     }
 
-    pub fn add_channel(&mut self, sender: K, reciever: K)
+    pub fn add_channel(&mut self, sender: &K, reciever: &K)
     where
         K: Eq + Hash + Copy,
     {
         let tx = self.agents.get(&reciever).unwrap().in_channel.tx();
 
-        self.agents.entry(sender).and_modify(|s| {
-            s.internal.new_outgoing_key(&reciever);
-            s.out_channels.insert(reciever, tx);
+        self.agents.entry(*sender).and_modify(|s| {
+            s.internal.new_outgoing_key(reciever);
+            s.out_channels.insert(*reciever, tx);
         });
 
         self.agents
-            .entry(reciever)
+            .entry(*reciever)
             .and_modify(|a| a.internal.new_incoming_key(&sender));
     }
 

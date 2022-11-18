@@ -50,7 +50,7 @@ where
         system.terminals.insert(id);
         system.add_agent(id, internal, true, kind, buffer, internal_buffer);
         for j in 0..n_acceptors {
-            system.add_channel(AgentID::Acceptor(j), id);
+            system.add_channel(&AgentID::Acceptor(j), &id);
         }
     }
 
@@ -62,8 +62,8 @@ where
         system.add_agent(id, internal, false, kind, buffer, internal_buffer);
         for j in 0..n_acceptors {
             //if j > n_acceptors/2 {break};
-            system.add_channel(AgentID::Acceptor(j), id);
-            system.add_channel(id, AgentID::Acceptor(j));
+            system.add_channel(&AgentID::Acceptor(j), &id);
+            system.add_channel(&id, &AgentID::Acceptor(j));
         }
     }
     system

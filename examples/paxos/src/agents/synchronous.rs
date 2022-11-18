@@ -62,7 +62,7 @@ where
         system.terminals.insert(id);
         system.add_agent(id, internal);
         for j in 0..n_acceptors {
-            system.add_channel(AgentID::Acceptor(j), id);
+            system.add_channel(&AgentID::Acceptor(j), &id);
         }
     }
 
@@ -73,8 +73,8 @@ where
         let id = internal.id();
         system.add_agent(id, internal);
         for j in 0..n_acceptors {
-            system.add_channel(AgentID::Acceptor(j), id);
-            system.add_channel(id, AgentID::Acceptor(j));
+            system.add_channel(&AgentID::Acceptor(j), &id);
+            system.add_channel(&id, &AgentID::Acceptor(j));
         }
     }
     system
