@@ -3,9 +3,9 @@
 //! The user only needs to write an implementation of each Agent's inner logic 
 //! and a function that sets up the initial conditions.
 //! 
-//! The internal logic of an agent is expressed by implementing the [`internal::Internal`] trait. 
+//! The internal logic of an agent is expressed by implementing the [`Internal`] trait. 
 //!
-//!
+//! 
 //!
 
 pub mod synchronous;
