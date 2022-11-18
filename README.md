@@ -5,7 +5,7 @@ This projects aims to implement some known distributed systems algorithms and va
 Comments welcome!
 
 ## Systems
-[`systems`](/systems) - a libray for writing simulations of distributed systems.
+[`systems`](./systems/) - a libray for writing simulations of distributed systems.
 
 ## Examples
 Currently, we have an implementation of the [paxos algorithm](https://en.wikipedia.org/wiki/Paxos_(computer_science)). Each proposer is given a different value 0..N (currently N = 16). The algorithm can be run via
