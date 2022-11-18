@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::time::Duration;
-use system::tokio::sync::{AgentType, SyncAgent, SyncSystem};
+use system::tokio::sync::{AgentType, System};
 
 use super::synchronous::AgentInternal;
 use super::*;
@@ -13,8 +13,7 @@ use proposer::ProposerInternal;
 /// Paxos implemented in tokio
 ///
 ///
-pub type PaxosAgent<T> = SyncAgent<AgentInternal<T>, AgentID, Message<T>>;
-pub type PaxosSystem<T> = SyncSystem<AgentInternal<T>, AgentID, Message<T>>;
+pub type PaxosSystem<T> = System<AgentInternal<T>>;
 
 pub fn setup_paxos<T>(
     proposer_initial_values: Vec<(T, TimeStamp, Duration)>,

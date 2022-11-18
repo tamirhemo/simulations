@@ -1,4 +1,4 @@
-use super::agent::*;
+use super::{agent::*, internal};
 use super::channel::Channels;
 use super::interface::{AgentType, Interface};
 use super::internal::*;
@@ -9,7 +9,7 @@ use tokio::sync::mpsc;
 use std::fmt::Debug;
 use std::hash::Hash;
 #[derive(Debug)]
-pub struct System<S, A, K, T> {
+pub struct GeneralSystem<S, A, K, T> {
     pub interfaces: HashMap<K, S>,
     pub agents: HashMap<K, A>,
     pub terminals: HashSet<K>,
@@ -23,12 +23,14 @@ pub enum SystemError {
     ThreadError,
 }
 
-pub type SyncSystem<I, K, T> = System<
+pub type SyncSystem<I, K, T> = GeneralSystem<
     Interface<I, Option<T>, Instruction<K, T>>,
     Agent<I, Option<T>, Instruction<K, T>, Channels<K, T>>,
     K,
     T,
 >;
+
+pub type System<I> = SyncSystem<I, <I as SyncInternalQueue>::Key, <I as SyncInternalQueue>::Message>;
 
 impl<I, K, T> SyncSystem<I, K, T>
 where
@@ -40,7 +42,7 @@ where
 {
     pub fn new(terminals_size: usize) -> Self {
         let (tx, rx) = mpsc::channel(terminals_size);
-        System {
+        GeneralSystem {
             interfaces: HashMap::new(),
             agents: HashMap::new(),
             terminals: HashSet::new(),

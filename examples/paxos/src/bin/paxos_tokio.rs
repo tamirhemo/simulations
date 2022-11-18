@@ -1,5 +1,6 @@
 use paxos::agents::tokio_agents::setup_paxos;
 use paxos::agents::*;
+use rand::Rng;
 use std::time::Duration;
 use system::tokio::sync::AgentType;
 
@@ -7,11 +8,11 @@ use system::tokio::sync::AgentType;
 async fn main() {
     let num_of_learners: usize = 10;
     let num_of_acceptors: usize = 100;
-    let num_of_proposers: usize = 40;
+    let num_of_proposers: usize = 50;
     let modulus = 17;
-    let timeout = Duration::from_millis(10);
+    let timeout = Duration::from_secs(10);
     let rng_range = 50;
-    let kind = AgentType::Light;
+    let kind = AgentType::Blocking;
 
     let initial_values: Vec<(String, u32, Duration)> = (0..num_of_proposers)
         .map(|i| -> String {
@@ -23,8 +24,8 @@ async fn main() {
 
     println!("Building the system...");
     let paxos = setup_paxos(initial_values, num_of_acceptors, num_of_learners, kind);
-    println!("Runnning...");
 
+    println!("Runnning...");
     let verdict_messages = paxos.run().await.unwrap();
 
     let mut verdicts: Vec<String> = verdict_messages
