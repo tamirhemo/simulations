@@ -1,6 +1,6 @@
 // An integration test for the message passing system
 
-// 
+//
 
 use std::collections::VecDeque;
 use system::{Instruction, Internal};
@@ -9,12 +9,16 @@ use system::{Instruction, Internal};
 pub struct CycleInternal {
     input_key: Option<usize>,
     output_key: Option<usize>,
-    starter : bool,
+    starter: bool,
 }
 
 impl CycleInternal {
     pub fn new(starter: bool) -> Self {
-        CycleInternal { input_key: None, output_key: None, starter: starter }
+        CycleInternal {
+            input_key: None,
+            output_key: None,
+            starter: starter,
+        }
     }
 }
 
@@ -48,8 +52,11 @@ impl Internal for CycleInternal {
     fn process_message(&mut self, message: Option<Self::Message>) -> Self::Queue {
         assert!(message.is_some());
         let value = message.unwrap();
-    
+
         let out = self.output_key.unwrap();
-        VecDeque::from(vec![Instruction::Send(out, value + 1), Instruction::Terminate(value+1)])
+        VecDeque::from(vec![
+            Instruction::Send(out, value + 1),
+            Instruction::Terminate(value + 1),
+        ])
     }
 }

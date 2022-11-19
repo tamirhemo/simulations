@@ -1,7 +1,5 @@
 use proc_macro::TokenStream;
-use proc_macro2;
 use quote::quote;
-use syn;
 
 pub fn impl_internal(ast: &syn::DeriveInput) -> TokenStream {
     let trait_name = quote!(Internal);
@@ -36,7 +34,7 @@ pub fn impl_function(ast: &syn::DeriveInput, trait_name: proc_macro2::TokenStrea
     let start_token = quote!(start());
     let process_message_token = quote!(process_message(message));
 
-    let make_arms = |token| match_arms(name, &data_enum, token);
+    let make_arms = |token| match_arms(name, data_enum, token);
 
     // Match arms for methods
     let outgoint_key_arms = make_arms(outgoint_key_token);

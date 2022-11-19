@@ -34,13 +34,12 @@ impl<T: Clone + Eq + Debug> Internal for ProposerInternal<T> {
 
     fn new_outgoing_key(&mut self, key: &Self::Key) {
         match key {
-            AgentID::Acceptor(_) => self.acceptors.insert(key.clone()),
+            AgentID::Acceptor(_) => self.acceptors.insert(*key),
             _ => panic!("Invalid connection"),
         };
     }
 
     fn new_incoming_key(&mut self, _: &Self::Key) {
-        ()
     }
 
     fn start(&mut self) -> Self::Queue {

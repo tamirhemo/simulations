@@ -32,13 +32,7 @@ where
     // Initialize acceptors
     for i in 0..n_acceptors {
         let internal = AgentInternal::Acceptor(AcceptorInternal::new(i));
-        system.add_agent(
-            internal.id(),
-            internal,
-            kind,
-            buffer,
-            internal_buffer,
-        );
+        system.add_agent(internal.id(), internal, kind, buffer, internal_buffer);
     }
 
     // Initialize Learners

@@ -1,5 +1,4 @@
 use proc_macro::TokenStream;
-use syn;
 
 mod internal;
 

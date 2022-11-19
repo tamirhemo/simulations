@@ -46,7 +46,7 @@ where
     where
         K: Eq + Hash + Copy,
     {
-        let tx = self.agents.get(&reciever).unwrap().in_channel.tx();
+        let tx = self.agents.get(reciever).unwrap().in_channel.tx();
 
         self.agents.entry(*sender).and_modify(|s| {
             s.internal.new_outgoing_key(reciever);
@@ -55,12 +55,13 @@ where
 
         self.agents
             .entry(*reciever)
-            .and_modify(|a| a.internal.new_incoming_key(&sender));
+            .and_modify(|a| a.internal.new_incoming_key(sender));
     }
 
     pub fn add_terminal(&mut self, key: K)
     where
-    K: Eq + Hash + Copy, {
+        K: Eq + Hash + Copy,
+    {
         self.terminals.insert(key);
     }
 
@@ -92,3 +93,4 @@ where
         Ok(terminal_values)
     }
 }
+

@@ -29,27 +29,18 @@ pub enum AgentID {
 
 impl AgentID {
     pub fn is_proposer(&self) -> bool {
-        match self {
-            AgentID::Proposer(_) => true,
-            _ => false,
-        }
+        matches!(self, AgentID::Proposer(_))
     }
     pub fn is_leanrer(&self) -> bool {
-        match self {
-            AgentID::Learner(_) => true,
-            _ => false,
-        }
+        matches!(self, AgentID::Learner(_))
     }
     pub fn is_acceptor(&self) -> bool {
-        match self {
-            AgentID::Acceptor(_) => true,
-            _ => false,
-        }
+        matches!(self, AgentID::Acceptor(_))
     }
 }
 
 // Errors
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgentError<T> {
     RecvError(channel::RecvError),
     SendError(channel::SendError<Message<T>>),
@@ -61,7 +52,7 @@ pub enum AgentError<T> {
     RecvTimeoutError(channel::RecvTimeoutError),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgentInternalError {
     WrongMessageType,
     NoMessage,

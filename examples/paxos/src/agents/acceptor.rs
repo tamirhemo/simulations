@@ -1,7 +1,7 @@
 use crate::agents::*;
 use std::collections::HashSet;
 
-pub mod mpsc;
+pub mod internal;
 #[derive(Debug, Clone)]
 pub struct AcceptorInternal<T> {
     pub id: AgentID,

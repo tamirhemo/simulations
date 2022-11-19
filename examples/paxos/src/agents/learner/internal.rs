@@ -42,8 +42,7 @@ where
         }
     }
 
-    fn new_outgoing_key(&mut self, key: &Self::Key) {
-        ()
+    fn new_outgoing_key(&mut self, _: &Self::Key) {
     }
 }
 

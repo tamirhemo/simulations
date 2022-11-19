@@ -67,10 +67,8 @@ pub struct Core<I, T, M> {
     tx_inst: mpsc::Sender<M>,
 }
 
-pub type SyncCoreError<I> = CoreError<
-    <I as Internal>::Error,
-    Instruction<<I as Internal>::Key, <I as Internal>::Message>,
->;
+pub type SyncCoreError<I> =
+    CoreError<<I as Internal>::Error, Instruction<<I as Internal>::Key, <I as Internal>::Message>>;
 
 #[derive(Debug, Clone)]
 pub enum CoreError<E, Q> {
@@ -104,8 +102,8 @@ where
     ) -> Self {
         LightCore {
             core: internal,
-            rx: rx,
-            tx_inst: tx_inst,
+            rx,
+            tx_inst,
         }
     }
 
@@ -159,8 +157,8 @@ where
     ) -> Self {
         Core {
             core: internal,
-            rx: rx,
-            tx_inst: tx_inst,
+            rx,
+            tx_inst,
         }
     }
     fn new_incoming_key(&mut self, key: &K) {

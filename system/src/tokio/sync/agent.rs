@@ -58,8 +58,8 @@ where
         let (tx_inst, rx_inst) = mpsc::channel(internal_buffer);
         (
             Agent {
-                tx: tx,
-                rx_inst: rx_inst,
+                tx,
+                rx_inst,
                 channels: Channels::new(buffer),
                 _phantom: PhantomData,
             },

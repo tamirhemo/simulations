@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::time::Duration;
 use tokio::time::Instant;
 
-pub mod mpsc;
+pub mod internal;
 #[derive(Debug, Clone)]
 struct Buffer<T> {
     acc_votes: HashSet<usize>,
@@ -40,8 +40,8 @@ impl<T: Clone> ProposerInternal<T> {
             id: AgentID::Proposer(id),
             time: 0,
             value: init_value,
-            timeout: timeout,
-            rng_range: rng_range,
+            timeout,
+            rng_range,
             acceptors: HashSet::new(),
             buffer: Buffer::new(),
         }

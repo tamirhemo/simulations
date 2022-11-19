@@ -35,7 +35,7 @@ async fn main() {
 
     assert!(verdicts.windows(2).all(|a| a[0] == a[1]));
 
-    let verdict = verdicts.pop().clone();
+    let verdict = verdicts.pop();
 
     if let Some(s) = verdict {
         println!("A consensus has been reached! {}", s);

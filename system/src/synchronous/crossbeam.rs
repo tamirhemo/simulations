@@ -1,6 +1,6 @@
-use crate::internal::Internal;
 use super::system;
 use super::{agent, channel};
+use crate::internal::Internal;
 use channel::*;
 use crossbeam_channel as cb;
 use std::collections::HashMap;

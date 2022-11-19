@@ -2,7 +2,7 @@ use crate::agents::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
-pub mod mpsc;
+pub mod internal;
 
 #[derive(Clone, Debug)]
 pub struct LearnerInternal<T> {

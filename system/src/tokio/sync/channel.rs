@@ -3,7 +3,6 @@ use std::hash::Hash;
 use tokio::sync::mpsc;
 
 pub type SendError<T> = mpsc::error::SendError<T>;
-pub type Receiver<T> = mpsc::Receiver<T>;
 
 #[derive(Debug)]
 pub struct Channels<K, M> {
@@ -19,8 +18,8 @@ where
     pub fn new(buffer: usize) -> Self {
         let (tx, rx) = mpsc::channel(buffer);
         Channels {
-            tx: tx,
-            rx: rx,
+            tx,
+            rx,
             out_channels: HashMap::new(),
         }
     }
@@ -40,11 +39,11 @@ where
     }
 
     pub async fn send(&self, key: &K, message: M) -> Result<(), SendError<M>> {
-        self.out_channels.get(&key).unwrap().send(message).await
+        self.out_channels.get(key).unwrap().send(message).await
     }
 
     pub fn get(&self, key: &K) -> Option<mpsc::Sender<M>> {
-        self.out_channels.get(key).map(|tx| tx.clone())
+        self.out_channels.get(key).cloned()
     }
 
     pub async fn recv(&mut self) -> Option<M> {

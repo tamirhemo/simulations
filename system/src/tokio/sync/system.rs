@@ -71,33 +71,31 @@ where
     where
         K: Eq + Hash + Copy,
     {
-        let tx = self.agents.get(&reciever).unwrap().channels.tx();
+        let tx = self.agents.get(reciever).unwrap().channels.tx();
 
         self.agents.entry(*sender).and_modify(|agent| {
             agent.channels.insert(*reciever, tx);
         });
 
         self.interfaces.entry(*sender).and_modify(|interface| {
-            interface.new_outgoing_key(&reciever);
+            interface.new_outgoing_key(reciever);
         });
 
         self.interfaces
             .entry(*reciever)
-            .and_modify(|interface| interface.new_incoming_key(&sender));
+            .and_modify(|interface| interface.new_incoming_key(sender));
     }
 
     pub fn add_terminal(&mut self, key: K)
     where
-    K: Eq + Hash + Copy, {
+        K: Eq + Hash + Copy,
+    {
         self.terminals.insert(key);
     }
 
     pub async fn run(mut self) -> Result<Vec<T>, SystemError> {
-        let mut interfaces = self.interfaces.into_iter();
-        let mut agents = self.agents.into_iter();
-
         // Spawn threads for interfaces
-        while let Some((_, interface)) = interfaces.next() {
+        for  (_, interface) in self.interfaces {
             match interface {
                 Interface::Light(mut core) => {
                     tokio::spawn(async move { core.run().await.ok() });
@@ -114,7 +112,7 @@ where
         }
 
         // Spawn threads for agents
-        while let Some((key, mut agent)) = agents.next() {
+        for (key, mut agent) in self.agents {
             let tx = match self.terminals.contains(&key) {
                 true => Some(self.tx_term.clone()),
                 false => None,
