@@ -11,24 +11,19 @@ pub enum AgentType {
 }
 
 #[derive(Debug)]
-pub enum Interface<I, T, M> {
-    Light(LightCore<I, T, M>),
-    Blocking(Core<I, T, M>),
-    Heavy(Core<I, T, M>),
+pub enum Interface<I : Internal> {
+    Light(LightCore<I>),
+    Blocking(Core<I>),
+    Heavy(Core<I>),
 }
 
-impl<I, K, T> Interface<I, Option<T>, Instruction<K, T>>
-where
-    I: Internal<Key = K, Message = T> + Send + Debug + 'static,
-    T: Send + Debug + 'static,
-    K: Send + Debug + 'static,
-    I::Error: Debug + Send + 'static,
+impl<I: Internal> Interface<I>
 {
     pub fn new(
         internal: I,
         kind: AgentType,
-        tx_inst: mpsc::Sender<Instruction<K, T>>,
-        rx: mpsc::Receiver<Option<T>>,
+        tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
+        rx: mpsc::Receiver<Option<I::Message>>,
     ) -> Self {
         match kind {
             AgentType::Light => Interface::Light(LightCore::new(internal, tx_inst, rx)),
@@ -36,7 +31,7 @@ where
             AgentType::Heavy => Interface::Heavy(Core::new(internal, tx_inst, rx)),
         }
     }
-    pub fn new_incoming_key(&mut self, key: &K) {
+    pub fn new_incoming_key(&mut self, key: &I::Key) {
         match self {
             Interface::Light(core) => core.new_incoming_key(key),
             Interface::Blocking(core) => core.new_incoming_key(key),
@@ -44,7 +39,7 @@ where
         }
     }
 
-    pub fn new_outgoing_key(&mut self, key: &K) {
+    pub fn new_outgoing_key(&mut self, key: &I::Key) {
         match self {
             Interface::Light(core) => core.new_outgoing_key(key),
             Interface::Blocking(core) => core.new_outgoing_key(key),
@@ -54,17 +49,17 @@ where
 }
 
 #[derive(Debug)]
-pub struct LightCore<I, T, M> {
+pub struct LightCore<I : Internal> {
     core: I,
-    rx: mpsc::Receiver<T>,
-    tx_inst: mpsc::Sender<M>,
+    rx: mpsc::Receiver<Option<I::Message>>,
+    tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
 }
 
 #[derive(Debug)]
-pub struct Core<I, T, M> {
+pub struct Core<I: Internal> {
     core: I,
-    rx: mpsc::Receiver<T>,
-    tx_inst: mpsc::Sender<M>,
+    rx: mpsc::Receiver<Option<I::Message>>,
+    tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
 }
 
 pub type SyncCoreError<I> =
@@ -88,17 +83,11 @@ impl<E, Q> CoreError<E, Q> {
     }
 }
 
-impl<I, K, T, E> LightCore<I, Option<T>, Instruction<K, T>>
-where
-    I: Internal<Key = K, Message = T, Error = E> + Send + Debug + 'static,
-    T: Send + Debug + 'static,
-    K: Send + Debug + 'static,
-    E: Send + Debug + 'static,
-{
+impl<I : Internal> LightCore<I> {
     fn new(
         internal: I,
-        tx_inst: mpsc::Sender<Instruction<K, T>>,
-        rx: mpsc::Receiver<Option<T>>,
+        tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
+        rx: mpsc::Receiver<Option<I::Message>>,
     ) -> Self {
         LightCore {
             core: internal,
@@ -107,11 +96,11 @@ where
         }
     }
 
-    fn new_incoming_key(&mut self, key: &K) {
+    fn new_incoming_key(&mut self, key: &I::Key) {
         self.core.new_incoming_key(key)
     }
 
-    pub fn new_outgoing_key(&mut self, key: &K) {
+    pub fn new_outgoing_key(&mut self, key: &I::Key) {
         self.core.new_outgoing_key(key)
     }
 
@@ -124,7 +113,7 @@ where
         Ok(())
     }
 
-    pub async fn process_message(&mut self, message: Option<T>) -> Result<(), SyncCoreError<I>> {
+    pub async fn process_message(&mut self, message: Option<I::Message>) -> Result<(), SyncCoreError<I>> {
         let mut instructions = self.core.process_message(message);
 
         while let Some(inst) = instructions.pop_front() {
@@ -143,17 +132,12 @@ where
     }
 }
 
-impl<I, K, T, E> Core<I, Option<T>, Instruction<K, T>>
-where
-    I: Internal<Key = K, Message = T, Error = E> + Send + Debug + 'static,
-    T: Send + Debug + 'static,
-    K: Send + Debug + 'static,
-    E: Send + Debug + 'static,
-{
+impl<I : Internal> Core<I>
+where {
     fn new(
         internal: I,
-        tx_inst: mpsc::Sender<Instruction<K, T>>,
-        rx: mpsc::Receiver<Option<T>>,
+        tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
+        rx: mpsc::Receiver<Option<I::Message>>,
     ) -> Self {
         Core {
             core: internal,
@@ -161,11 +145,11 @@ where
             tx_inst,
         }
     }
-    fn new_incoming_key(&mut self, key: &K) {
+    fn new_incoming_key(&mut self, key: &I::Key) {
         self.core.new_incoming_key(key)
     }
 
-    pub fn new_outgoing_key(&mut self, key: &K) {
+    pub fn new_outgoing_key(&mut self, key: &I::Key) {
         self.core.new_outgoing_key(key)
     }
 
@@ -178,7 +162,7 @@ where
         Ok(())
     }
 
-    pub fn process_message(&mut self, message: Option<T>) -> Result<(), SyncCoreError<I>> {
+    pub fn process_message(&mut self, message: Option<I::Message>) -> Result<(), SyncCoreError<I>> {
         let mut instructions = self.core.process_message(message);
 
         while let Some(inst) = instructions.pop_front() {

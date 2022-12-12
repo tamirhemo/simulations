@@ -5,6 +5,8 @@
 
 use std::collections::VecDeque;
 use std::time::Duration;
+use std::fmt::Debug;
+use std::hash::Hash;
 
 /// Instructions that an agent's internal system can give its incoming-outgoing channel interface.
 ///  
@@ -36,11 +38,11 @@ pub trait InstructionQueue {
 /// instructions and recieving messages.
 ///
 ///
-pub trait Internal {
-    type Message;
-    type Key;
-    type Error;
-    type Queue: InstructionQueue<Instruction = Instruction<Self::Key, Self::Message>>;
+pub trait Internal : Send + 'static {
+    type Message :  Send +  Clone + Debug + 'static;
+    type Key : Hash + Send + Copy + Debug + Eq + PartialEq;
+    type Error : Send + Debug;
+    type Queue: Send + InstructionQueue<Instruction = Instruction<Self::Key, Self::Message>>;
 
     /// Get an incoming channel from the system to an agent with identifier given by Key.
     ///

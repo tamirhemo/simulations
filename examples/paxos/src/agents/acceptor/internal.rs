@@ -8,7 +8,7 @@ pub type Acceptor<T> = AgentCB<AcceptorInternal<T>, AgentID, Message<T>>;
 
 type Queue<T> = VecDeque<Instruction<AgentID, Message<T>>>;
 
-impl<T: Clone + Eq + Debug> Internal for AcceptorInternal<T> {
+impl<T: Clone + Eq + Send + Debug + 'static > Internal for AcceptorInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
     type Queue = Queue<T>;

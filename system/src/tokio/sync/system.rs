@@ -7,14 +7,13 @@ use tokio;
 use tokio::sync::mpsc;
 
 use std::fmt::Debug;
-use std::hash::Hash;
 #[derive(Debug)]
-pub struct GeneralSystem<S, A, K, T> {
-    pub interfaces: HashMap<K, S>,
-    pub agents: HashMap<K, A>,
-    pub terminals: HashSet<K>,
-    tx_term: mpsc::Sender<T>,
-    rx_term: mpsc::Receiver<T>,
+pub struct System<I : Internal> {
+    pub interfaces: HashMap<I::Key, Interface<I>>,
+    pub agents: HashMap<I::Key, Agent<I, Channels<I::Key, I::Message>>>,
+    pub terminals: HashSet<I::Key>,
+    tx_term: mpsc::Sender<I::Message>,
+    rx_term: mpsc::Receiver<I::Message>,
 }
 
 #[derive(Debug)]
@@ -23,26 +22,11 @@ pub enum SystemError {
     ThreadError,
 }
 
-pub type SyncSystem<I, K, T> = GeneralSystem<
-    Interface<I, Option<T>, Instruction<K, T>>,
-    Agent<I, Option<T>, Instruction<K, T>, Channels<K, T>>,
-    K,
-    T,
->;
 
-pub type System<I> = SyncSystem<I, <I as Internal>::Key, <I as Internal>::Message>;
-
-impl<I, K, T> SyncSystem<I, K, T>
-where
-    I: Internal<Key = K, Message = T> + Send + Debug + 'static,
-    K: Send + Debug + Eq + Hash + Copy + 'static,
-    I::Error: Send + Debug + 'static,
-    T: Send + Debug + 'static,
-    I::Queue: Send + Debug + 'static,
-{
+impl<I : Internal> System<I> {
     pub fn new(terminals_size: usize) -> Self {
         let (tx, rx) = mpsc::channel(terminals_size);
-        GeneralSystem {
+        System {
             interfaces: HashMap::new(),
             agents: HashMap::new(),
             terminals: HashSet::new(),
@@ -53,24 +37,18 @@ where
 
     pub fn add_agent(
         &mut self,
-        key: K,
+        key: I::Key,
         internal: I,
         kind: AgentType,
         buffer: usize,
-        internal_buffer: usize,
-    ) where
-        K: Eq + Hash + Copy,
-    {
-        let (agent, interface) = SyncAgent::new(internal, kind, buffer, internal_buffer);
+        internal_buffer: usize) {
+        let (agent, interface) = Agent::new(internal, kind, buffer, internal_buffer);
 
         self.agents.insert(key, agent);
         self.interfaces.insert(key, interface);
     }
 
-    pub fn add_channel(&mut self, sender: &K, reciever: &K)
-    where
-        K: Eq + Hash + Copy,
-    {
+    pub fn add_channel(&mut self, sender: &I::Key, reciever: &I::Key) {
         let tx = self.agents.get(reciever).unwrap().channels.tx();
 
         self.agents.entry(*sender).and_modify(|agent| {
@@ -86,14 +64,11 @@ where
             .and_modify(|interface| interface.new_incoming_key(sender));
     }
 
-    pub fn add_terminal(&mut self, key: K)
-    where
-        K: Eq + Hash + Copy,
-    {
+    pub fn add_terminal(&mut self, key: I::Key) {
         self.terminals.insert(key);
     }
 
-    pub async fn run(mut self) -> Result<Vec<T>, SystemError> {
+    pub async fn run(mut self) -> Result<Vec<I::Message>, SystemError> {
         // Spawn threads for interfaces
         for  (_, interface) in self.interfaces {
             match interface {

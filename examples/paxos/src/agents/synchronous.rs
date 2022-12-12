@@ -16,14 +16,14 @@ use proposer::ProposerInternal;
 #[derive(Clone, Debug, Internal)]
 pub enum AgentInternal<T>
 where
-    T: Clone + Eq + Hash + Debug,
+    T: 'static + Send + Clone + Eq + Hash + Debug,
 {
     Learner(LearnerInternal<T>),
     Proposer(ProposerInternal<T>),
     Acceptor(AcceptorInternal<T>),
 }
 
-impl<T: Clone + Eq + Hash + Debug> AgentInternal<T> {
+impl<T: Clone + Eq + Hash + Debug + Send> AgentInternal<T> {
     pub fn id(&self) -> AgentID {
         match self {
             AgentInternal::Learner(internal) => internal.id,
@@ -45,7 +45,7 @@ pub fn setup_paxos<T>(
     n_learners: usize,
 ) -> PaxosCB<T>
 where
-    T: Clone + Eq + Hash + Debug,
+    T: Clone + Send + Eq + Hash + Debug,
 {
     let mut system: PaxosCB<T> = PaxosCB::new();
 

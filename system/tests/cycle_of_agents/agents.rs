@@ -1,7 +1,5 @@
 // An integration test for the message passing system
 
-//
-
 use std::collections::VecDeque;
 use system::{Instruction, Internal};
 

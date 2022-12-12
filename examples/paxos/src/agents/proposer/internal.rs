@@ -26,7 +26,7 @@ fn new_time<T: Clone + Eq + Debug>(
     instructions
 }
 
-impl<T: Clone + Eq + Debug> Internal for ProposerInternal<T> {
+impl<T: Clone + Send + Eq + Debug + 'static > Internal for ProposerInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
     type Queue = Queue<T>;

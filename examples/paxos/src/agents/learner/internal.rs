@@ -11,7 +11,7 @@ type Queue<T> = VecDeque<Instruction<AgentID, Message<T>>>;
 
 impl<T> Internal for LearnerInternal<T>
 where
-    T: Clone + Eq + Hash + Debug,
+    T: Clone + Send + Eq + Hash + Debug + 'static,
 {
     type Message = Message<T>;
     type Key = AgentID;

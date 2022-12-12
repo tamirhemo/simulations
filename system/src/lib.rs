@@ -43,6 +43,7 @@
 //! To realize CycleInternal as an agent, we need to implement the [`Internal`] trait.
 //!
 //! ```
+//! # use crate::Instruction;
 //! impl Internal for CycleInternal {
 //!     type Message = usize;
 //!     type Error = ();
@@ -86,7 +87,9 @@
 //! We can now initiate and start the system as follows:
 //!
 //!```
-//! # use synchronous::crossbeam::System;
+//! # use system::synchronous::crossbeam::System;
+//! # use std::collections::VecDeque;
+//! # use CycleInternal;
 //!
 //! let mut cycle = System::new();
 //!
@@ -104,7 +107,7 @@
 //! cycle.add_terminal(0);
 //!
 //! let values = cycle.run().unwrap();
-//! assert_eq!(values.get(&0), Some(&n));
+//! assert_eq!(values.get(&0), Some(&3));
 //!```
 //!
 
