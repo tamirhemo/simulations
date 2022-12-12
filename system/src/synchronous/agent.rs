@@ -17,14 +17,11 @@ pub enum AgentError<N, T> {
     ExitedWithoutValue,
 }
 
-impl<I, K, T, S, R> Agent<I, S, R>
+impl<I : Internal, S, R> Agent<I, S, R>
 where
-    I: Internal<Key = K, Message = T>,
-    S: OutChannels<Key = K, Message = T>,
-    R: InChannel<Sender = S::Sender, Message = T>,
-    T: std::fmt::Debug,
-    <I as Internal>::Error: std::fmt::Debug,
-{
+    S: OutChannels<Key = I::Key, Message = I::Message>,
+    R: InChannel<Sender = S::Sender, Message = I::Message>
+    {
     pub fn new(internal: I) -> Self {
         Agent {
             internal,
@@ -45,12 +42,9 @@ where
 
     pub fn run_command(
         &mut self,
-        command: Instruction<K, T>,
+        command: Instruction<I::Key, I::Message>,
         instructions: &mut I::Queue,
-    ) -> Result<Option<T>, AgentError<I::Error, T>>
-    where
-        I: Internal<Key = K, Message = T>,
-    {
+    ) -> Result<Option<I::Message>, AgentError<I::Error, I::Message>> {
         match command {
             Instruction::Send(k, m) => {
                 self.out_channels.send(k, m).ok();
@@ -66,7 +60,7 @@ where
         Ok(None)
     }
 
-    pub fn run(&mut self) -> Result<T, AgentError<I::Error, T>> {
+    pub fn run(&mut self) -> Result<I::Message, AgentError<I::Error, I::Message>> {
         let mut instructions = self.internal.start();
         //assert!(!instructions.is_empty());
 
