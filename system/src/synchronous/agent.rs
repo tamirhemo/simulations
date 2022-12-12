@@ -17,11 +17,11 @@ pub enum AgentError<N, T> {
     ExitedWithoutValue,
 }
 
-impl<I : Internal, S, R> Agent<I, S, R>
+impl<I: Internal, S, R> Agent<I, S, R>
 where
     S: OutChannels<Key = I::Key, Message = I::Message>,
-    R: InChannel<Sender = S::Sender, Message = I::Message>
-    {
+    R: InChannel<Sender = S::Sender, Message = I::Message>,
+{
     pub fn new(internal: I) -> Self {
         Agent {
             internal,

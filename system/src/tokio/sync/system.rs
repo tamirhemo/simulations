@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 
 use std::fmt::Debug;
 #[derive(Debug)]
-pub struct System<I : Internal> {
+pub struct System<I: Internal> {
     pub interfaces: HashMap<I::Key, Interface<I>>,
     pub agents: HashMap<I::Key, Agent<I, Channels<I::Key, I::Message>>>,
     pub terminals: HashSet<I::Key>,
@@ -22,8 +22,7 @@ pub enum SystemError {
     ThreadError,
 }
 
-
-impl<I : Internal> System<I> {
+impl<I: Internal> System<I> {
     pub fn new(terminals_size: usize) -> Self {
         let (tx, rx) = mpsc::channel(terminals_size);
         System {
@@ -41,7 +40,8 @@ impl<I : Internal> System<I> {
         internal: I,
         kind: AgentType,
         buffer: usize,
-        internal_buffer: usize) {
+        internal_buffer: usize,
+    ) {
         let (agent, interface) = Agent::new(internal, kind, buffer, internal_buffer);
 
         self.agents.insert(key, agent);
@@ -70,7 +70,7 @@ impl<I : Internal> System<I> {
 
     pub async fn run(mut self) -> Result<Vec<I::Message>, SystemError> {
         // Spawn threads for interfaces
-        for  (_, interface) in self.interfaces {
+        for (_, interface) in self.interfaces {
             match interface {
                 Interface::Light(mut core) => {
                     tokio::spawn(async move { core.run().await.ok() });

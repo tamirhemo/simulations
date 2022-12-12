@@ -11,14 +11,13 @@ pub enum AgentType {
 }
 
 #[derive(Debug)]
-pub enum Interface<I : Internal> {
+pub enum Interface<I: Internal> {
     Light(LightCore<I>),
     Blocking(Core<I>),
     Heavy(Core<I>),
 }
 
-impl<I: Internal> Interface<I>
-{
+impl<I: Internal> Interface<I> {
     pub fn new(
         internal: I,
         kind: AgentType,
@@ -49,7 +48,7 @@ impl<I: Internal> Interface<I>
 }
 
 #[derive(Debug)]
-pub struct LightCore<I : Internal> {
+pub struct LightCore<I: Internal> {
     core: I,
     rx: mpsc::Receiver<Option<I::Message>>,
     tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
@@ -83,7 +82,7 @@ impl<E, Q> CoreError<E, Q> {
     }
 }
 
-impl<I : Internal> LightCore<I> {
+impl<I: Internal> LightCore<I> {
     fn new(
         internal: I,
         tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,
@@ -113,7 +112,10 @@ impl<I : Internal> LightCore<I> {
         Ok(())
     }
 
-    pub async fn process_message(&mut self, message: Option<I::Message>) -> Result<(), SyncCoreError<I>> {
+    pub async fn process_message(
+        &mut self,
+        message: Option<I::Message>,
+    ) -> Result<(), SyncCoreError<I>> {
         let mut instructions = self.core.process_message(message);
 
         while let Some(inst) = instructions.pop_front() {
@@ -132,8 +134,7 @@ impl<I : Internal> LightCore<I> {
     }
 }
 
-impl<I : Internal> Core<I>
-where {
+impl<I: Internal> Core<I> {
     fn new(
         internal: I,
         tx_inst: mpsc::Sender<Instruction<I::Key, I::Message>>,

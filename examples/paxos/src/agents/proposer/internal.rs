@@ -26,7 +26,7 @@ fn new_time<T: Clone + Eq + Debug>(
     instructions
 }
 
-impl<T: Clone + Send + Eq + Debug + 'static > Internal for ProposerInternal<T> {
+impl<T: Clone + Send + Eq + Debug + 'static> Internal for ProposerInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
     type Queue = Queue<T>;
@@ -39,8 +39,7 @@ impl<T: Clone + Send + Eq + Debug + 'static > Internal for ProposerInternal<T> {
         };
     }
 
-    fn new_incoming_key(&mut self, _: &Self::Key) {
-    }
+    fn new_incoming_key(&mut self, _: &Self::Key) {}
 
     fn start(&mut self) -> Self::Queue {
         let mut rng = thread_rng();

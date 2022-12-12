@@ -8,7 +8,7 @@ use tokio;
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
-pub struct Agent<I : Internal, C> {
+pub struct Agent<I: Internal, C> {
     tx: mpsc::Sender<Option<I::Message>>,
     rx_inst: mpsc::Receiver<Instruction<I::Key, I::Message>>,
     pub channels: C,
@@ -22,7 +22,7 @@ pub enum AgentError<I: Internal> {
     ExitedWithoutValue,
 }
 
-impl<I : Internal> From<SendError<I::Message>> for AgentError<I> {
+impl<I: Internal> From<SendError<I::Message>> for AgentError<I> {
     fn from(e: SendError<I::Message>) -> Self {
         AgentError::SendError(e)
     }
@@ -36,13 +36,13 @@ impl<I: Internal> From<SyncCoreError<I>> for AgentError<I> {
 
 //pub type SyncAgent<I, K, T> = Agent<I, Option<T>, Instruction<K, T>, Channels<K, T>>;
 
-impl<I : Internal> Agent<I, Channels<I::Key, I::Message>> {
+impl<I: Internal> Agent<I, Channels<I::Key, I::Message>> {
     pub fn new(
         internal: I,
         kind: AgentType,
         buffer: usize,
         internal_buffer: usize,
-    ) -> (Self, Interface<I>)  {
+    ) -> (Self, Interface<I>) {
         let (tx, rx) = mpsc::channel(buffer);
         let (tx_inst, rx_inst) = mpsc::channel(internal_buffer);
         (
