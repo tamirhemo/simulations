@@ -1,7 +1,6 @@
 // An integration test for the message passing system
 
-use std::collections::VecDeque;
-use system::{Instruction, Internal};
+use system::{AgentInternal, NextState, Sender};
 
 #[derive(Debug)]
 pub struct CycleInternal {
@@ -20,11 +19,10 @@ impl CycleInternal {
     }
 }
 
-impl Internal for CycleInternal {
+impl AgentInternal for CycleInternal {
     type Message = usize;
     type Error = ();
     type Key = usize;
-    type Queue = VecDeque<Instruction<usize, usize>>;
 
     fn new_incoming_key(&mut self, key: &Self::Key) {
         assert!(self.input_key.is_none());
@@ -36,25 +34,20 @@ impl Internal for CycleInternal {
         self.output_key = Some(*key);
     }
 
-    fn start(&mut self) -> Self::Queue {
-        let mut instructions = VecDeque::new();
+    fn start(&mut self, tx: &mut Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
         if self.starter {
             let out = self.output_key.unwrap();
-            instructions.push_back(Instruction::Send(out, 0));
+            tx.send(out, 0).unwrap();
         }
-        instructions.push_back(Instruction::Get);
-
-        instructions
+        Ok(NextState::Get)
     }
 
-    fn process_message(&mut self, message: Option<Self::Message>) -> Self::Queue {
+    fn process_message(&mut self, message: Option<Self::Message>, tx: &mut  Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
         assert!(message.is_some());
         let value = message.unwrap();
 
         let out = self.output_key.unwrap();
-        VecDeque::from(vec![
-            Instruction::Send(out, value + 1),
-            Instruction::Terminate(value + 1),
-        ])
+        tx.send(out, value+1).unwrap();
+        Ok(NextState::Terminate(value+1))
     }
 }

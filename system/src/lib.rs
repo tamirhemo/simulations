@@ -3,7 +3,7 @@
 //! The user only needs to write an implementation of each Agent's inner logic
 //! and a function that sets up the initial conditions.
 //!
-//! The internal logic of an agent is expressed by implementing the [`Internal`] trait.
+//! The internal logic of an agent is expressed by implementing the [`AgentInternal`] trait.
 //! Systems are then built by instantiating a corresponding System struct.
 //!
 //! Currently there are two types of Systems avaialble:
@@ -17,7 +17,7 @@
 //!     * Users can specify different types of agents. For agents with internal operations that
 //!     are potentially computationally heavy, blocking threads are spawn.
 //!
-//! **Note**: The reason we did not abstract away the properties of a system in a trait is
+//! **Note**: The reason we did not abstract away some other properties of agents and systems in a trait is
 //! that including async methods in trait is an unstable fearture in Rust.
 //!
 //! # Example
@@ -44,11 +44,10 @@
 //!
 //! ```
 //! # use crate::Instruction;
-//! impl Internal for CycleInternal {
+//! impl AgentInternal for CycleInternal {
 //!     type Message = usize;
 //!     type Error = ();
 //!     type Key = usize;
-//!     type Queue = VecDeque<Instruction<usize, usize>>;
 //!
 //!     fn new_incoming_key(&mut self, key: &Self::Key) {
 //!         assert!(self.input_key.is_none());
@@ -60,23 +59,21 @@
 //!         self.output_key = Some(*key);
 //!     }
 //!
-//!     fn start(&mut self) -> Self::Queue {
-//!         let mut instructions = VecDeque::new();
-//!         if self.starter {
-//!             let out = self.output_key.unwrap();
-//!             instructions.push_back(Instruction::Send(out, 0));
-//!         }
-//!         instructions.push_back(Instruction::Get);
+//!    fn start(&mut self, tx: &mut Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+//!        if self.starter {
+//!            let out = self.output_key.unwrap();
+//!            tx.send(out, 0).unwrap();
+//!        }
+//!        Ok(NextState::Get)
+//!    }
 //!
-//!         instructions
-//!     }
-//!
-//!    fn process_message(&mut self, message: Option<Self::Message>) -> Self::Queue {
+//!    fn process_message(&mut self, message: Option<Self::Message>, tx: &mut  Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
 //!        assert!(message.is_some());
 //!        let value = message.unwrap();
 //!    
 //!        let out = self.output_key.unwrap();
-//!        VecDeque::from(vec![Instruction::Send(out, value + 1), Instruction::Terminate(value+1)])
+//!        tx.send(out, value+1).unwrap();
+//!        Ok(NextState::Terminate(value+1))
 //!    }
 //! }
 //!```
@@ -115,4 +112,4 @@ pub mod internal;
 pub mod synchronous;
 pub mod tokio;
 
-pub use internal::{Instruction, Internal};
+pub use internal::{Instruction, Internal, AgentInternal, NextState, Sender};

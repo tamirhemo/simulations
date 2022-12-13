@@ -30,7 +30,7 @@ pub trait InstructionQueue {
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
 
     fn pop_front(&mut self) -> Option<Instruction<Self::Key, Self::Message>>;
-    fn push_back(&mut self, instruction : Instruction<Self::Key, Self::Message>);
+    fn push_back(&mut self, instruction: Instruction<Self::Key, Self::Message>);
     fn append(&mut self, other: &mut Self);
 }
 /// An interface for describing the internal operation of an agent.
@@ -44,7 +44,7 @@ pub trait Internal: Send + 'static {
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
     type Error: Send + Debug;
-    type Queue: Send + InstructionQueue<Key=Self::Key, Message = Self::Message>;
+    type Queue: Send + InstructionQueue<Key = Self::Key, Message = Self::Message>;
 
     /// Get an incoming channel from the system to an agent with identifier given by Key.
     ///
@@ -73,8 +73,10 @@ pub trait Internal: Send + 'static {
 
 // Convenient implementation for outside use
 impl<K, T> InstructionQueue for VecDeque<Instruction<K, T>>
-where K : Hash + Send + Copy + Debug + Eq + PartialEq,
-      T :   Send + Clone + Debug + 'static {
+where
+    K: Hash + Send + Copy + Debug + Eq + PartialEq,
+    T: Send + Clone + Debug + 'static,
+{
     type Key = K;
     type Message = T;
 
@@ -82,7 +84,7 @@ where K : Hash + Send + Copy + Debug + Eq + PartialEq,
         self.pop_front()
     }
 
-    fn push_back(&mut self, instruction : Instruction<K, T>) {
+    fn push_back(&mut self, instruction: Instruction<K, T>) {
         self.push_back(instruction)
     }
 
@@ -90,29 +92,40 @@ where K : Hash + Send + Copy + Debug + Eq + PartialEq,
         self.append(other)
     }
 }
-/* 
-pub trait AgentInterface {
-    type Message: Send + Clone + Debug + 'static;
-    type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
-    type SendError: Send + Debug;
 
-    fn send(&self, key : Self::Key, msg: Self::Message) -> Result<(), Self::SendError>;
-    fn get(&self) -> Option<()>;
-    fn get_timeout(&self, timeout: Duration) -> Result<(), ()>;
-    fn terminate(&self, msg: Self::Message) -> Result<(), ()>;
+pub enum NextState<T> {
+    /// Wait for a message.
+    Get,
+    /// Wait for a message, but only up for the duration of timeout.
+    GetTimeout(Duration),
+    /// Return a termination message to be collected by the system.
+    Terminate(T),
 }
 
-pub trait AgentBackend {
-    type Message: Send + Clone + Debug + 'static;
-    type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
+impl<K, T> From<NextState<T>> for Instruction<K, T> {
+    fn from(state: NextState<T>) -> Self {
+        match state {
+            NextState::Get => Instruction::Get,
+            NextState::GetTimeout(t) => Instruction::GetTimeout(t),
+            NextState::Terminate(message) => Instruction::Terminate(message),
+        }
+    }
+}
 
-    fn get_instruction(&self) -> Option<Instruction<Self::Key, Self::Message>>;
+pub struct Sender<'a, K, T>(&'a mut VecDeque<Instruction<K, T>>);
+#[derive(Debug, Clone, PartialEq)]
+pub struct SendError<T>(pub T);
+
+impl<'a, K, T> Sender<'a, K, T> {
+    pub fn send(&mut self, key: K, message: T) -> Result<(), SendError<(K, T)>> {
+        self.0.push_back(Instruction::Send(key, message));
+        Ok(())
+    }
 }
 
 pub trait AgentInternal: Send + 'static {
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
-    type Interface: AgentInterface<Key = Self::Key, Message = Self::Message>;
     type Error: Send + Debug;
 
     /// Get an incoming channel from the system to an agent with identifier given by Key.
@@ -130,7 +143,10 @@ pub trait AgentInternal: Send + 'static {
     ///
     /// Usually used to make all the steps before needing to wait for messages and then
     /// sending a Get or GetTimeout command
-    fn start(&mut self, interface: &Self::Interface) -> Result<(), Self::Error>;
+    fn start(
+        &mut self,
+        tx: &mut Sender<Self::Key, Self::Message>,
+    ) -> Result<NextState<Self::Message>, Self::Error>;
 
     /// Process a potential message
     ///
@@ -140,11 +156,45 @@ pub trait AgentInternal: Send + 'static {
     fn process_message(
         &mut self,
         message: Option<Self::Message>,
-        interface: &Self::Interface,
-    ) -> Result<(), Self::Error>;
+        tx: &mut Sender<Self::Key, Self::Message>,
+    ) -> Result<NextState<Self::Message>, Self::Error>;
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct SendError<T> (pub T);
+impl<T: AgentInternal> Internal for T {
+    type Message = T::Message;
+    type Key = T::Key;
+    type Error = T::Error;
+    type Queue = VecDeque<Instruction<T::Key, T::Message>>;
 
-*/
+    fn new_incoming_key(&mut self, key: &Self::Key) {
+        self.new_incoming_key(key)
+    }
+
+    fn new_outgoing_key(&mut self, key: &Self::Key) {
+        self.new_outgoing_key(key)
+    }
+
+    fn start(&mut self) -> Self::Queue {
+        let mut instructions = Self::Queue::new();
+        let mut tx = Sender {
+            0: &mut instructions,
+        };
+
+        let next_state = self.start(&mut tx).unwrap();
+        instructions.push_back(next_state.into());
+
+        instructions
+    }
+
+    fn process_message(&mut self, message: Option<Self::Message>) -> Self::Queue {
+        let mut instructions = Self::Queue::new();
+        let mut tx = Sender {
+            0: &mut instructions,
+        };
+
+        let next_state = self.process_message(message, &mut tx).unwrap();
+        instructions.push_back(next_state.into());
+
+        instructions
+    }
+}
