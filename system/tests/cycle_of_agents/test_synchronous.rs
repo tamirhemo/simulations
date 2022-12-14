@@ -1,9 +1,6 @@
-use super::agents::CycleInternal;
 use super::setup;
 use system::CrossbeamSystem;
-use system::System;
 
-pub type Cycle = CrossbeamSystem<CycleInternal>;
 
 #[test]
 fn test_sync_cycle() {

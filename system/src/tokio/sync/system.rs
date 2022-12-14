@@ -111,11 +111,12 @@ impl<I: Internal> System for TokioSystem<I> {
         self.terminals.insert(key);
     }
 
-    fn add_agent(&mut self, key: I::Key, internal: I, parameters: Parameters) {
+    fn add_agent(&mut self, key: I::Key, internal: I, parameters: Option<Parameters>) {
+        let param = parameters.unwrap();
         let (kind, buffer, internal_buffer) = (
-            parameters.kind,
-            parameters.buffer,
-            parameters.internal_buffer,
+            param.kind,
+            param.buffer,
+            param.internal_buffer,
         );
         let agent = Agent::new(internal, kind, buffer, internal_buffer);
 

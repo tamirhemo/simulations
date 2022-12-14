@@ -13,14 +13,14 @@ where
     system.add_agent(
         0,
         CycleInternal::new(true),
-        (AgentType::Light, 2 * n, 2 * n).into(),
+        Some((AgentType::Light, 2 * n, 2 * n).into()),
     );
 
     for i in 1..n {
         system.add_agent(
             i,
             CycleInternal::new(false),
-            (AgentType::Light, 2 * n, 2 * n).into(),
+            Some((AgentType::Light, 2 * n, 2 * n).into()),
         );
         system.add_channel(&(i - 1), &i);
     }

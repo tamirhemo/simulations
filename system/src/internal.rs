@@ -88,6 +88,7 @@ where
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NextState<T> {
     /// Wait for a message.
     Get,
@@ -115,6 +116,10 @@ impl<'a, K, T> Sender<'a, K, T> {
     pub fn send(&mut self, key: K, message: T) -> Result<(), SendError<(K, T)>> {
         self.0.push_back(Instruction::Send(key, message));
         Ok(())
+    }
+
+    pub fn new(queue : & 'a mut VecDeque<Instruction<K, T>>) -> Self {
+        Sender {0 : queue}
     }
 }
 

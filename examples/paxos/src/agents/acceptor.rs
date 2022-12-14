@@ -118,80 +118,56 @@ impl<T: Clone + Eq + Send + Debug + 'static> AgentInternal for AcceptorInternal<
     }
 }
 
-/*
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::VecDeque;
+    use system::{internal::Sender, Instruction};
     #[test]
     fn test_parse_new_time() {
-        let internal: AcceptorInternal<u32> = AcceptorInternal::new(0);
-        let mut acceptor = Acceptor::new(internal);
-        let tx = acceptor.in_channel.tx();
+        let mut acceptor: AcceptorInternal<u32> = AcceptorInternal::new(0);
 
         let prop_id = AgentID::Proposer(0);
-        let (tx_prop, rx_prop) = channel::unbounded();
-
-        acceptor.out_channels.insert(prop_id, tx_prop);
-
-        tx.send(Message::NewTime(1, prop_id)).unwrap();
-
         let mut instructions = VecDeque::new();
-        acceptor
-            .run_command(Instruction::Get, &mut instructions)
-            .unwrap();
+        let mut tx = Sender::new(&mut instructions);
 
-        assert_eq!(acceptor.internal.time, 1);
+        let next_state = acceptor.process_message(Some(Message::NewTime(1, prop_id)), &mut tx).unwrap();
 
-        let command = instructions.pop_front().unwrap();
+        assert_eq!(acceptor.time, 1);
+        assert_eq!(next_state, NextState::Get.into());
+        
+        let message_sent = match instructions.pop_front().unwrap() {
+            Instruction::Send(_, m) => m,
+            _=> panic!("falied")
+        };
+        assert_eq!(message_sent, Message::UpdatedTime(1, None, None, AgentID::Acceptor(0)));
+  
+        let mut tx = Sender::new(&mut instructions);
 
-        acceptor.run_command(command, &mut instructions).unwrap();
-        let rec = rx_prop.recv().unwrap();
-
-        let expected_msg = Message::UpdatedTime(1, None, None, AgentID::Acceptor(0));
-        assert_eq!(rec, expected_msg);
-
-        let command = instructions.pop_front().unwrap();
-        assert_eq!(command, Instruction::Get);
-
-        tx.send(Message::NewTime(0, prop_id)).unwrap();
-        acceptor.run_command(command, &mut instructions).unwrap();
-        assert_eq!(acceptor.internal.time, 1);
+        let next_state = acceptor.process_message(Some(Message::NewTime(0, prop_id)), &mut tx).unwrap();
+        assert_eq!(acceptor.time, 1);
     }
 
     #[test]
     fn test_parse_proposal() {
-        let internal = AcceptorInternal::new(0);
-        let mut acceptor = Acceptor::new(internal);
-        let tx = acceptor.in_channel.tx();
-
-        let (tx_l, rx_l) = channel::unbounded();
-
-        acceptor.out_channels.insert(AgentID::Learner(0), tx_l);
-        acceptor.internal.learners.insert(AgentID::Learner(0));
-
-        let prop_id = AgentID::Proposer(0);
-        acceptor.internal.proposers.insert(prop_id);
-
-        tx.send(Message::Proposal(1, vec![1, 2, 3], AgentID::Proposer(0)))
-            .unwrap();
+        let mut acceptor = AcceptorInternal::new(0);
 
         let mut instructions = VecDeque::new();
-        acceptor
-            .run_command(Instruction::Get, &mut instructions)
-            .unwrap();
+        let mut tx = Sender::new(&mut instructions);
 
-        assert_eq!(acceptor.internal.accepted_time, Some(1));
-        assert_eq!(acceptor.internal.accepted_value, Some(vec![1, 2, 3]));
+        acceptor.new_outgoing_key( & AgentID::Learner(0));
+        acceptor.new_incoming_key(& AgentID::Proposer(0));
 
-        let command = instructions.pop_front().unwrap();
-        acceptor.run_command(command, &mut instructions).unwrap();
+        acceptor.proposers.insert(AgentID::Proposer(0));
 
-        let vote = rx_l.recv().unwrap();
-        assert_eq!(
-            vote,
-            Message::NewVote(acceptor.internal.id, 1, vec![1, 2, 3])
-        );
+        acceptor.process_message(Some(Message::Proposal(1, vec![1, 2, 3], AgentID::Proposer(0))), &mut tx).unwrap();
+
+
+        assert_eq!(acceptor.accepted_time, Some(1));
+        assert_eq!(acceptor.accepted_value, Some(vec![1, 2, 3]));
+
     }
 }
 
-*/
+

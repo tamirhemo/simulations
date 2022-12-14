@@ -32,7 +32,7 @@ where
         system.add_agent(
             internal.id(),
             internal,
-            (kind, buffer, internal_buffer).into(),
+            Some((kind, buffer, internal_buffer).into()),
         );
     }
 
@@ -42,7 +42,7 @@ where
         let internal = PaxosInternal::Learner(LearnerInternal::new(i));
         let id = internal.id();
         system.add_terminal(id);
-        system.add_agent(id, internal, (kind, buffer, internal_buffer).into());
+        system.add_agent(id, internal, Some((kind, buffer, internal_buffer).into()));
         system.add_terminal(id);
         for j in 0..n_acceptors {
             system.add_channel(&AgentID::Acceptor(j), &id);
@@ -54,7 +54,7 @@ where
     for (i, (val, range, timeout)) in proposer_initial_values.into_iter().enumerate() {
         let internal = PaxosInternal::Proposer(ProposerInternal::new(i, val, range, timeout));
         let id = internal.id();
-        system.add_agent(id, internal, (kind, buffer, internal_buffer).into());
+        system.add_agent(id, internal, Some((kind, buffer, internal_buffer).into()));
         for j in 0..n_acceptors {
             //if j > n_acceptors/2 {break};
             system.add_channel(&AgentID::Acceptor(j), &id);

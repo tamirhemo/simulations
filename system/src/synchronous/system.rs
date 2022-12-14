@@ -85,7 +85,7 @@ where
     type Internal = I;
     type AgentParameters = SyncParameters;
 
-    fn add_agent(&mut self, key: K, internal: I, _: SyncParameters)
+    fn add_agent(&mut self, key: K, internal: I, _: Option<SyncParameters>)
     where
         K: Eq + Hash,
     {

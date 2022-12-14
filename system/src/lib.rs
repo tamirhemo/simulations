@@ -42,6 +42,7 @@
 //!
 //! ```
 //! # use system::internal::*;
+//! # use system::synchronous::crossbeam::CrossbeamSystem;
 //! # #[derive(Debug)]
 //! # pub struct CycleInternal {
 //! #   // ID of input agent
@@ -91,6 +92,7 @@
 //!```
 //! use system::synchronous::crossbeam::CrossbeamSystem;
 //! # use system::internal::*;
+//! # use system::System;
 //! # #[derive(Debug)]
 //! # pub struct CycleInternal {
 //! #   // ID of input agent
@@ -141,9 +143,9 @@
 //! let mut cycle = CrossbeamSystem::new();
 //!
 //! // Add agents
-//! cycle.add_agent(0, CycleInternal::new(true));
-//! cycle.add_agent(1, CycleInternal::new(false));
-//! cycle.add_agent(2, CycleInternal::new(false));
+//! cycle.add_agent(0, CycleInternal::new(true), None);
+//! cycle.add_agent(1, CycleInternal::new(false), None);
+//! cycle.add_agent(2, CycleInternal::new(false), None);
 //!
 //! // Add channels
 //! cycle.add_channel(&0, &1);
@@ -180,7 +182,7 @@ pub trait System: Sized {
         &mut self,
         key: <Self::Internal as Internal>::Key,
         internal: Self::Internal,
-        parameters: Self::AgentParameters,
+        parameters: Option<Self::AgentParameters>,
     );
 
     /// Add a channel between the agent identified with the key [`sender`] and [`reciever`]
