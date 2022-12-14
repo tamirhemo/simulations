@@ -89,7 +89,7 @@
 //! We can now initiate and start the system as follows:
 //!
 //!```
-//! # use system::synchronous::crossbeam::System;
+//! use system::synchronous::crossbeam::CrossbeamSystem;
 //! # use system::internal::*;
 //! # #[derive(Debug)]
 //! # pub struct CycleInternal {
@@ -138,7 +138,7 @@
 //! #    }
 //! # }
 //! #
-//! let mut cycle = System::new();
+//! let mut cycle = CrossbeamSystem::new();
 //!
 //! // Add agents
 //! cycle.add_agent(0, CycleInternal::new(true));
@@ -162,14 +162,16 @@ pub mod internal;
 pub mod synchronous;
 pub mod tokio;
 
-pub use internal::{AgentInternal, Internal, Instruction, NextState, Sender};
+pub use crate::tokio::sync::TokioSystem;
+pub use synchronous::crossbeam::CrossbeamSystem;
 
+pub use internal::{AgentInternal, Instruction, Internal, NextState, Sender};
 
 /// An interface defining properties of a system useful for setup
-/// 
+///
 /// **Note**: The reason we did not abstract away some other properties of agents and systems in a trait is
 /// that including async methods in trait is an unstable fearture in Rust.
-pub trait System : Sized {
+pub trait System: Sized {
     type Internal: Internal;
     type AgentParameters;
 
@@ -189,7 +191,7 @@ pub trait System : Sized {
     );
 
     /// Add an agent to the set of terminals
-    /// 
+    ///
     /// The system does not finish execusion until each of the agents in the set of terminals
     /// has been terminated. Once all the agents in the set of terminals is done executing,
     ///  an agent not in this set will be dropped regardless of whether it terminated or not.

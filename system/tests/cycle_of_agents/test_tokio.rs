@@ -1,16 +1,15 @@
 use super::agents::CycleInternal;
+use super::setup;
 use system::tokio::sync;
 use system::tokio::sync::AgentType;
 use tokio;
-use super::setup;
 
 pub type Cycle = sync::TokioSystem<CycleInternal>;
-
 
 #[test]
 fn test_sync_cycle() {
     let n = 1000;
-    let cycle = setup(Cycle::new(n+1), n);
+    let cycle = setup(Cycle::new(n + 1), n);
 
     let threaded_rt = tokio::runtime::Runtime::new().unwrap();
 

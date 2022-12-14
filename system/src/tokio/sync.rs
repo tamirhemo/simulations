@@ -1,6 +1,6 @@
 mod agent;
-mod channel;
 mod agent_core;
+mod channel;
 mod system;
 
 pub use self::system::TokioSystem;

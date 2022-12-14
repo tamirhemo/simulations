@@ -1,7 +1,7 @@
 use paxos::agents::*;
+use paxos::setup_paxos;
 use std::time::Duration;
 use system::tokio::sync::{AgentType, TokioSystem};
-use paxos::setup_paxos;
 
 #[tokio::main]
 async fn main() {
@@ -24,7 +24,11 @@ async fn main() {
     println!("Building the system...");
     let paxos = setup_paxos(
         TokioSystem::new(num_of_learners),
-        initial_values, num_of_acceptors, num_of_learners, kind);
+        initial_values,
+        num_of_acceptors,
+        num_of_learners,
+        kind,
+    );
 
     println!("Runnning...");
     let verdict_messages = paxos.run().await.unwrap();

@@ -10,7 +10,7 @@ use std::hash::Hash;
 type Channel<T> = (cb::Sender<T>, cb::Receiver<T>);
 pub type AgentCB<I, K, T> = agent::Agent<I, OutChannelsCB<K, T>, Channel<T>>;
 
-pub type System<I> = system::System<
+pub type CrossbeamSystem<I> = system::SyncSystem<
     <I as Internal>::Key,
     AgentCB<I, <I as Internal>::Key, <I as Internal>::Message>,
 >;

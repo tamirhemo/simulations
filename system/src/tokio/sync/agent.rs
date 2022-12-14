@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use super::channel::{Channels, SendError};
 use super::agent_core::*;
+use super::channel::{Channels, SendError};
 use crate::internal::*;
 use std::fmt::Debug;
 use tokio;
@@ -9,25 +9,26 @@ use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub struct Agent<I: Internal, C> {
-    core : AgentCore<I>,
-    interface : AgentInterface<I, C>,
+    core: AgentCore<I>,
+    interface: AgentInterface<I, C>,
 }
 
 impl<I: Internal> Agent<I, Channels<I::Key, I::Message>> {
-    pub fn new(
-        internal: I,
-        kind: AgentType,
-        buffer: usize,
-        internal_buffer: usize,
-    ) -> Self {
+    pub fn new(internal: I, kind: AgentType, buffer: usize, internal_buffer: usize) -> Self {
         let (tx, rx) = mpsc::channel(buffer);
         let (tx_inst, rx_inst) = mpsc::channel(internal_buffer);
-        Agent { core: AgentCore::new(internal, kind, tx_inst, rx), 
-            interface: AgentInterface::new(tx,rx_inst, buffer) ,
-             }
+        Agent {
+            core: AgentCore::new(internal, kind, tx_inst, rx),
+            interface: AgentInterface::new(tx, rx_inst, buffer),
+        }
     }
 
-    pub fn split(self) -> (AgentCore<I>, AgentInterface<I, Channels<I::Key, I::Message>>) {
+    pub fn split(
+        self,
+    ) -> (
+        AgentCore<I>,
+        AgentInterface<I, Channels<I::Key, I::Message>>,
+    ) {
         (self.core, self.interface)
     }
 
@@ -35,7 +36,11 @@ impl<I: Internal> Agent<I, Channels<I::Key, I::Message>> {
         self.interface.channels.tx()
     }
 
-    pub fn insert_outgoing_channel(&mut self, key: I::Key, tx: mpsc::Sender<I::Message>) -> Option<mpsc::Sender<I::Message>> {
+    pub fn insert_outgoing_channel(
+        &mut self,
+        key: I::Key,
+        tx: mpsc::Sender<I::Message>,
+    ) -> Option<mpsc::Sender<I::Message>> {
         self.interface.channels.out_channels.insert(key, tx)
     }
 
@@ -79,17 +84,17 @@ impl<I: Internal> From<SyncCoreError<I>> for AgentError<I> {
 
 impl<I: Internal> AgentInterface<I, Channels<I::Key, I::Message>> {
     pub fn new(
-        tx : mpsc::Sender<Option<<I as Internal>::Message>>,
-        rx_inst : mpsc::Receiver<Instruction<<I as Internal>::Key, <I as Internal>::Message>>,
+        tx: mpsc::Sender<Option<<I as Internal>::Message>>,
+        rx_inst: mpsc::Receiver<Instruction<<I as Internal>::Key, <I as Internal>::Message>>,
         buffer: usize,
     ) -> Self {
-            AgentInterface {
-                tx,
-                rx_inst,
-                channels: Channels::new(buffer),
-                _phantom: PhantomData,
-            }
-            //Interface::new(internal, kind, tx_inst, rx),
+        AgentInterface {
+            tx,
+            rx_inst,
+            channels: Channels::new(buffer),
+            _phantom: PhantomData,
+        }
+        //Interface::new(internal, kind, tx_inst, rx),
     }
 
     pub async fn run_command(

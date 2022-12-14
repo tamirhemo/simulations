@@ -1,6 +1,8 @@
-use paxos::agents::synchronous::setup_paxos;
 use paxos::agents::*;
+use paxos::setup_paxos;
 use std::time::Duration;
+use system::tokio::sync::AgentType;
+use system::CrossbeamSystem;
 
 #[tokio::main]
 async fn main() {
@@ -20,7 +22,13 @@ async fn main() {
         .collect();
 
     println!("Building the system...");
-    let paxos = setup_paxos(initial_values, num_of_acceptors, num_of_learners);
+    let paxos = setup_paxos(
+        CrossbeamSystem::new(),
+        initial_values,
+        num_of_acceptors,
+        num_of_learners,
+        AgentType::Light,
+    );
     println!("Runnning...");
 
     let mut verdicts: Vec<String> = paxos

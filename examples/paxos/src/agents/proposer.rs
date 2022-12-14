@@ -176,8 +176,7 @@ fn new_time<T: Send + 'static + Clone + Eq + Debug + Hash>(
     Ok(NextState::GetTimeout(internal.timeout))
 }
 
-
-/* 
+/*
 
 
 #[cfg(test)]

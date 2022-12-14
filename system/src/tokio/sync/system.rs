@@ -1,11 +1,11 @@
 use super::agent::*;
+use super::agent_core::{AgentCore, AgentType};
 use super::channel::Channels;
-use super::agent_core::{AgentType, AgentCore};
 use crate::internal::*;
+use crate::System;
 use std::collections::{HashMap, HashSet};
 use tokio;
 use tokio::sync::mpsc;
-use crate::System;
 
 use std::fmt::Debug;
 #[derive(Debug)]
@@ -75,7 +75,6 @@ impl<I: Internal> TokioSystem<I> {
     }
 }
 
-
 pub struct Parameters {
     pub kind: AgentType,
     pub buffer: usize,
@@ -83,8 +82,12 @@ pub struct Parameters {
 }
 
 impl Parameters {
-    pub fn new(kind: AgentType, buffer: usize, internal_buffer: usize) -> Self{
-        Parameters { kind, buffer, internal_buffer }
+    pub fn new(kind: AgentType, buffer: usize, internal_buffer: usize) -> Self {
+        Parameters {
+            kind,
+            buffer,
+            internal_buffer,
+        }
     }
 }
 
@@ -92,11 +95,15 @@ impl From<(AgentType, usize, usize)> for Parameters {
     fn from(para_tuple: (AgentType, usize, usize)) -> Self {
         let (kind, buffer, internal_buffer) = para_tuple;
 
-        Parameters { kind, buffer, internal_buffer }
+        Parameters {
+            kind,
+            buffer,
+            internal_buffer,
+        }
     }
 }
 
-impl<I : Internal> System for TokioSystem<I> {
+impl<I: Internal> System for TokioSystem<I> {
     type Internal = I;
     type AgentParameters = Parameters;
 
@@ -104,13 +111,12 @@ impl<I : Internal> System for TokioSystem<I> {
         self.terminals.insert(key);
     }
 
-    fn add_agent(
-        &mut self,
-        key: I::Key,
-        internal: I,
-        parameters : Parameters,
-    ) {
-        let (kind, buffer, internal_buffer) = (parameters.kind, parameters.buffer, parameters.internal_buffer);
+    fn add_agent(&mut self, key: I::Key, internal: I, parameters: Parameters) {
+        let (kind, buffer, internal_buffer) = (
+            parameters.kind,
+            parameters.buffer,
+            parameters.internal_buffer,
+        );
         let agent = Agent::new(internal, kind, buffer, internal_buffer);
 
         self.agents.insert(key, agent);

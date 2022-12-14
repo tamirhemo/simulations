@@ -1,28 +1,14 @@
 use super::agents::CycleInternal;
-use system::synchronous::crossbeam;
+use super::setup;
+use system::CrossbeamSystem;
+use system::System;
 
-pub type Cycle = crossbeam::System<CycleInternal>;
-
-fn setup(n: usize) -> Cycle {
-    let mut cycle = crossbeam::System::new();
-
-    cycle.add_agent(0, CycleInternal::new(true));
-
-    for i in 1..n {
-        cycle.add_agent(i, CycleInternal::new(false));
-        cycle.add_channel(&(i - 1), &i);
-    }
-
-    cycle.add_channel(&(n - 1), &0);
-    cycle.add_terminal(0);
-
-    cycle
-}
+pub type Cycle = CrossbeamSystem<CycleInternal>;
 
 #[test]
 fn test_sync_cycle() {
     let n = 100;
-    let cycle = setup(n);
+    let cycle = setup(CrossbeamSystem::new(), n);
 
     let values = cycle.run().unwrap();
     assert_eq!(values.get(&0), Some(&n));

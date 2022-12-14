@@ -9,9 +9,9 @@ use crate::agents::learner::LearnerInternal;
 use crate::agents::proposer::ProposerInternal;
 use crate::agents::*;
 
-/// Setting up Paxos 
+/// Setting up Paxos
 pub fn setup_paxos<S, T>(
-    mut system : S,
+    mut system: S,
     proposer_initial_values: Vec<(T, TimeStamp, Duration)>,
     n_acceptors: usize,
     n_learners: usize,
@@ -19,8 +19,8 @@ pub fn setup_paxos<S, T>(
 ) -> S
 where
     T: Clone + Eq + Hash + Debug + Send + 'static,
-    S : System<Internal = PaxosInternal<T>>,
-    S::AgentParameters : From<(AgentType, usize, usize)>,
+    S: System<Internal = PaxosInternal<T>>,
+    S::AgentParameters: From<(AgentType, usize, usize)>,
 {
     let buffer = 10000;
     let internal_buffer = 1000;
@@ -29,7 +29,11 @@ where
     // Initialize acceptors
     for i in 0..n_acceptors {
         let internal = PaxosInternal::Acceptor(AcceptorInternal::new(i));
-        system.add_agent(internal.id(), internal, (kind, buffer, internal_buffer).into());
+        system.add_agent(
+            internal.id(),
+            internal,
+            (kind, buffer, internal_buffer).into(),
+        );
     }
 
     // Initialize Learners
