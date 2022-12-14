@@ -1,12 +1,14 @@
 use crossbeam_channel as channel;
 use std::fmt::Debug;
 use std::hash::Hash;
+use system::{AgentInternal, NextState, Sender};
+use system_derive::AgentInternal;
 
 pub mod acceptor;
 pub mod learner;
 pub mod proposer;
 pub mod synchronous;
-pub mod tokio_agents;
+//pub mod tokio_agents;
 
 pub type TimeStamp = u32;
 
@@ -58,6 +60,30 @@ pub enum AgentInternalError {
     NoMessage,
     NoAcceptedTime,
     NoConsensus,
+}
+
+/// A Paxos Agnet
+#[derive(AgentInternal)]
+pub enum PaxosInternal<T>
+where
+    T: Send + Clone + 'static + Eq + Hash + PartialEq + Debug,
+{
+    Learner(learner::LearnerInternal<T>),
+    Proposer(proposer::ProposerInternal<T>),
+    Acceptor(acceptor::AcceptorInternal<T>),
+}
+
+impl<T> PaxosInternal<T>
+where
+    T: Send + Clone + 'static + Eq + Hash + PartialEq + Debug,
+{
+    pub fn id(&self) -> AgentID {
+        match self {
+            PaxosInternal::Learner(internal) => internal.id,
+            PaxosInternal::Proposer(internal) => internal.id,
+            PaxosInternal::Acceptor(internal) => internal.id,
+        }
+    }
 }
 
 impl<T> From<channel::TryRecvError> for AgentError<T> {

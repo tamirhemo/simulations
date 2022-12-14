@@ -17,8 +17,6 @@
 //!     * Users can specify different types of agents. For agents with internal operations that
 //!     are potentially computationally heavy, blocking threads are spawn.
 //!
-//! **Note**: The reason we did not abstract away some other properties of agents and systems in a trait is
-//! that including async methods in trait is an unstable fearture in Rust.
 //!
 //! # Example
 //! We demonstrate the use of the library by implementing a system consisting of three
@@ -111,17 +109,17 @@
 //! #     type Message = usize;
 //! #     type Error = ();
 //! #     type Key = usize;
-//! # 
+//! #
 //! #     fn new_incoming_key(&mut self, key: &Self::Key) {
 //! #         assert!(self.input_key.is_none());
 //! #        self.input_key = Some(*key);
 //! #     }
-//! # 
+//! #
 //! #    fn new_outgoing_key(&mut self, key: &Self::Key) {
 //! #         assert!(self.output_key.is_none());
 //! #         self.output_key = Some(*key);
 //! #     }
-//! # 
+//! #
 //! #    fn start(&mut self, tx: &mut Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
 //! #        if self.starter {
 //! #            let out = self.output_key.unwrap();
@@ -129,7 +127,7 @@
 //! #        }
 //! #        Ok(NextState::Get)
 //! #    }
-//! # 
+//! #
 //! #   fn process_message(&mut self, message: Option<Self::Message>, tx: &mut  Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
 //! #        assert!(message.is_some());
 //! #        let value = message.unwrap();
@@ -139,7 +137,7 @@
 //! #        Ok(NextState::Terminate(value+1))
 //! #    }
 //! # }
-//! # 
+//! #
 //! let mut cycle = System::new();
 //!
 //! // Add agents
@@ -164,4 +162,36 @@ pub mod internal;
 pub mod synchronous;
 pub mod tokio;
 
-pub use internal::{Instruction, AgentInternal, NextState, Sender};
+pub use internal::{AgentInternal, Internal, Instruction, NextState, Sender};
+
+
+/// An interface defining properties of a system useful for setup
+/// 
+/// **Note**: The reason we did not abstract away some other properties of agents and systems in a trait is
+/// that including async methods in trait is an unstable fearture in Rust.
+pub trait System : Sized {
+    type Internal: Internal;
+    type AgentParameters;
+
+    /// Add a new agent to the system, with a given internal core and identifying key
+    fn add_agent(
+        &mut self,
+        key: <Self::Internal as Internal>::Key,
+        internal: Self::Internal,
+        parameters: Self::AgentParameters,
+    );
+
+    /// Add a channel between the agent identified with the key [`sender`] and [`reciever`]
+    fn add_channel(
+        &mut self,
+        sender: &<Self::Internal as Internal>::Key,
+        reciever: &<Self::Internal as Internal>::Key,
+    );
+
+    /// Add an agent to the set of terminals
+    /// 
+    /// The system does not finish execusion until each of the agents in the set of terminals
+    /// has been terminated. Once all the agents in the set of terminals is done executing,
+    ///  an agent not in this set will be dropped regardless of whether it terminated or not.
+    fn add_terminal(&mut self, key: <Self::Internal as Internal>::Key);
+}

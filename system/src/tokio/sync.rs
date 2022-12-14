@@ -1,8 +1,8 @@
 mod agent;
 mod channel;
-mod interface;
-pub mod system;
+mod agent_core;
+mod system;
 
-pub use self::system::System;
+pub use self::system::TokioSystem;
 pub use agent::Agent;
-pub use interface::AgentType;
+pub use agent_core::AgentType;

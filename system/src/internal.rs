@@ -33,13 +33,8 @@ pub trait InstructionQueue {
     fn push_back(&mut self, instruction: Instruction<Self::Key, Self::Message>);
     fn append(&mut self, other: &mut Self);
 }
-/// An interface for describing the internal operation of an agent.
-///
-/// An internal interface should contain the agent's local variables and the logic of the
-/// agent's operation. The internal system interacts with external interfaces by sending
-/// instructions and recieving messages.
-///
-///
+
+// For implementations
 pub trait Internal: Send + 'static {
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
@@ -123,6 +118,15 @@ impl<'a, K, T> Sender<'a, K, T> {
     }
 }
 
+/// An interface for describing the internal operation of an agent.
+///
+/// An internal interface should contain the agent's local variables and the logic of the
+/// agent's operation. The internal system interacts with external interfaces by sending
+/// instructions and recieving messages.
+///
+/// The agent sends messages by invoking the send method of the sender. After every message recievied,
+/// the agent can perform some internal operations and then wait for the next message, or wait for a
+/// certain amount of time.
 pub trait AgentInternal: Send + 'static {
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
@@ -141,8 +145,8 @@ pub trait AgentInternal: Send + 'static {
 
     /// Starting operations of the agent.
     ///
-    /// Usually used to make all the steps before needing to wait for messages and then
-    /// sending a Get or GetTimeout command
+    /// Usually used to make all the steps before needing to wait for messages. If the startup
+    /// exited succesfully, the agent can wait for a message using Get or GetTimeout.
     fn start(
         &mut self,
         tx: &mut Sender<Self::Key, Self::Message>,

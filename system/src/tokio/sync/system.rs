@@ -1,15 +1,16 @@
 use super::agent::*;
 use super::channel::Channels;
-use super::interface::{AgentType, Interface};
+use super::agent_core::{AgentType, AgentCore};
 use crate::internal::*;
 use std::collections::{HashMap, HashSet};
 use tokio;
 use tokio::sync::mpsc;
+use crate::System;
 
 use std::fmt::Debug;
 #[derive(Debug)]
-pub struct System<I: Internal> {
-    pub interfaces: HashMap<I::Key, Interface<I>>,
+pub struct TokioSystem<I: Internal> {
+    //pub interfaces: HashMap<I::Key, Interface<I>>,
     pub agents: HashMap<I::Key, Agent<I, Channels<I::Key, I::Message>>>,
     pub terminals: HashSet<I::Key>,
     tx_term: mpsc::Sender<I::Message>,
@@ -22,11 +23,10 @@ pub enum SystemError {
     ThreadError,
 }
 
-impl<I: Internal> System<I> {
+impl<I: Internal> TokioSystem<I> {
     pub fn new(terminals_size: usize) -> Self {
         let (tx, rx) = mpsc::channel(terminals_size);
-        System {
-            interfaces: HashMap::new(),
+        TokioSystem {
             agents: HashMap::new(),
             terminals: HashSet::new(),
             tx_term: tx,
@@ -34,66 +34,30 @@ impl<I: Internal> System<I> {
         }
     }
 
-    pub fn add_agent(
-        &mut self,
-        key: I::Key,
-        internal: I,
-        kind: AgentType,
-        buffer: usize,
-        internal_buffer: usize,
-    ) {
-        let (agent, interface) = Agent::new(internal, kind, buffer, internal_buffer);
-
-        self.agents.insert(key, agent);
-        self.interfaces.insert(key, interface);
-    }
-
-    pub fn add_channel(&mut self, sender: &I::Key, reciever: &I::Key) {
-        let tx = self.agents.get(reciever).unwrap().channels.tx();
-
-        self.agents.entry(*sender).and_modify(|agent| {
-            agent.channels.insert(*reciever, tx);
-        });
-
-        self.interfaces.entry(*sender).and_modify(|interface| {
-            interface.new_outgoing_key(reciever);
-        });
-
-        self.interfaces
-            .entry(*reciever)
-            .and_modify(|interface| interface.new_incoming_key(sender));
-    }
-
-    pub fn add_terminal(&mut self, key: I::Key) {
-        self.terminals.insert(key);
-    }
-
     pub async fn run(mut self) -> Result<Vec<I::Message>, SystemError> {
-        // Spawn threads for interfaces
-        for (_, interface) in self.interfaces {
-            match interface {
-                Interface::Light(mut core) => {
+        // Spawn threads for agents
+        for (key, agent) in self.agents {
+            let (core, mut interface) = agent.split();
+            match core {
+                AgentCore::Light(mut core) => {
                     tokio::spawn(async move { core.run().await.ok() });
                 }
-                Interface::Blocking(mut core) => {
+                AgentCore::Blocking(mut core) => {
                     tokio::task::spawn_blocking(move || {
                         core.run().ok();
                     });
                 }
-                Interface::Heavy(mut core) => {
+                AgentCore::Heavy(mut core) => {
                     std::thread::spawn(move || core.run().ok());
                 }
             }
-        }
 
-        // Spawn threads for agents
-        for (key, mut agent) in self.agents {
             let tx = match self.terminals.contains(&key) {
                 true => Some(self.tx_term.clone()),
                 false => None,
             };
 
-            tokio::spawn(async move { agent.run(tx).await });
+            tokio::spawn(async move { interface.run(tx).await });
         }
 
         let mut terminal_values = Vec::new();
@@ -108,5 +72,63 @@ impl<I: Internal> System<I> {
             }
         }
         Ok(terminal_values)
+    }
+}
+
+
+pub struct Parameters {
+    pub kind: AgentType,
+    pub buffer: usize,
+    pub internal_buffer: usize,
+}
+
+impl Parameters {
+    pub fn new(kind: AgentType, buffer: usize, internal_buffer: usize) -> Self{
+        Parameters { kind, buffer, internal_buffer }
+    }
+}
+
+impl From<(AgentType, usize, usize)> for Parameters {
+    fn from(para_tuple: (AgentType, usize, usize)) -> Self {
+        let (kind, buffer, internal_buffer) = para_tuple;
+
+        Parameters { kind, buffer, internal_buffer }
+    }
+}
+
+impl<I : Internal> System for TokioSystem<I> {
+    type Internal = I;
+    type AgentParameters = Parameters;
+
+    fn add_terminal(&mut self, key: I::Key) {
+        self.terminals.insert(key);
+    }
+
+    fn add_agent(
+        &mut self,
+        key: I::Key,
+        internal: I,
+        parameters : Parameters,
+    ) {
+        let (kind, buffer, internal_buffer) = (parameters.kind, parameters.buffer, parameters.internal_buffer);
+        let agent = Agent::new(internal, kind, buffer, internal_buffer);
+
+        self.agents.insert(key, agent);
+    }
+
+    fn add_channel(&mut self, sender: &I::Key, reciever: &I::Key) {
+        let tx = self.agents.get(reciever).unwrap().tx_channel();
+
+        self.agents.entry(*sender).and_modify(|agent| {
+            agent.insert_outgoing_channel(*reciever, tx);
+        });
+
+        self.agents.entry(*sender).and_modify(|interface| {
+            interface.new_outgoing_key(reciever);
+        });
+
+        self.agents
+            .entry(*reciever)
+            .and_modify(|interface| interface.new_incoming_key(sender));
     }
 }

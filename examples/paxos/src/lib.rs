@@ -4,3 +4,6 @@
 //#![warn(missing_docs)]
 
 pub mod agents;
+mod system;
+
+pub use crate::system::setup_paxos;

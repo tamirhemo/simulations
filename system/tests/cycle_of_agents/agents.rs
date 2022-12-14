@@ -34,7 +34,10 @@ impl AgentInternal for CycleInternal {
         self.output_key = Some(*key);
     }
 
-    fn start(&mut self, tx: &mut Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+    fn start(
+        &mut self,
+        tx: &mut Sender<Self::Key, Self::Message>,
+    ) -> Result<NextState<Self::Message>, Self::Error> {
         if self.starter {
             let out = self.output_key.unwrap();
             tx.send(out, 0).unwrap();
@@ -42,12 +45,16 @@ impl AgentInternal for CycleInternal {
         Ok(NextState::Get)
     }
 
-    fn process_message(&mut self, message: Option<Self::Message>, tx: &mut  Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+    fn process_message(
+        &mut self,
+        message: Option<Self::Message>,
+        tx: &mut Sender<Self::Key, Self::Message>,
+    ) -> Result<NextState<Self::Message>, Self::Error> {
         assert!(message.is_some());
         let value = message.unwrap();
 
         let out = self.output_key.unwrap();
-        tx.send(out, value+1).unwrap();
-        Ok(NextState::Terminate(value+1))
+        tx.send(out, value + 1).unwrap();
+        Ok(NextState::Terminate(value + 1))
     }
 }

@@ -11,13 +11,13 @@ pub enum AgentType {
 }
 
 #[derive(Debug)]
-pub enum Interface<I: Internal> {
+pub enum AgentCore<I: Internal> {
     Light(LightCore<I>),
     Blocking(Core<I>),
     Heavy(Core<I>),
 }
 
-impl<I: Internal> Interface<I> {
+impl<I: Internal> AgentCore<I> {
     pub fn new(
         internal: I,
         kind: AgentType,
@@ -25,24 +25,24 @@ impl<I: Internal> Interface<I> {
         rx: mpsc::Receiver<Option<I::Message>>,
     ) -> Self {
         match kind {
-            AgentType::Light => Interface::Light(LightCore::new(internal, tx_inst, rx)),
-            AgentType::Blocking => Interface::Blocking(Core::new(internal, tx_inst, rx)),
-            AgentType::Heavy => Interface::Heavy(Core::new(internal, tx_inst, rx)),
+            AgentType::Light => AgentCore::Light(LightCore::new(internal, tx_inst, rx)),
+            AgentType::Blocking => AgentCore::Blocking(Core::new(internal, tx_inst, rx)),
+            AgentType::Heavy => AgentCore::Heavy(Core::new(internal, tx_inst, rx)),
         }
     }
     pub fn new_incoming_key(&mut self, key: &I::Key) {
         match self {
-            Interface::Light(core) => core.new_incoming_key(key),
-            Interface::Blocking(core) => core.new_incoming_key(key),
-            Interface::Heavy(core) => core.new_incoming_key(key),
+            AgentCore::Light(core) => core.new_incoming_key(key),
+            AgentCore::Blocking(core) => core.new_incoming_key(key),
+            AgentCore::Heavy(core) => core.new_incoming_key(key),
         }
     }
 
     pub fn new_outgoing_key(&mut self, key: &I::Key) {
         match self {
-            Interface::Light(core) => core.new_outgoing_key(key),
-            Interface::Blocking(core) => core.new_outgoing_key(key),
-            Interface::Heavy(core) => core.new_outgoing_key(key),
+            AgentCore::Light(core) => core.new_outgoing_key(key),
+            AgentCore::Blocking(core) => core.new_outgoing_key(key),
+            AgentCore::Heavy(core) => core.new_outgoing_key(key),
         }
     }
 }
