@@ -3,7 +3,7 @@
 //! The user only needs to write an implementation of each Agent's inner logic
 //! and a function that sets up the initial conditions.
 //!
-//! The internal logic of an agent is expressed by implementing the [`AgentInternal`] trait.
+//! The internal logic of an agent is expressed by implementing the [`ActorInternal`] trait.
 //! Systems are then built by instantiating a corresponding System struct.
 //!
 //! Currently there are two types of Systems avaialble:
@@ -38,7 +38,7 @@
 //! }
 //!```
 //!
-//! To realize CycleInternal as an agent, we need to implement the [`AgentInternal`] trait.
+//! To realize CycleInternal as an agent, we need to implement the [`ActorInternal`] trait.
 //!
 //! ```
 //! # use system::internal::*;
@@ -52,7 +52,7 @@
 //! #  // whether the agent is the starter or not.
 //! #  starter : bool,
 //! # }
-//! impl AgentInternal for CycleInternal {
+//! impl ActorInternal for CycleInternal {
 //!     type Message = usize;
 //!     type Error = ();
 //!     type Key = usize;
@@ -107,7 +107,7 @@
 //! #         CycleInternal { input_key: None, output_key: None, starter: starter }
 //! #     }
 //! #  }
-//! # impl AgentInternal for CycleInternal {
+//! # impl ActorInternal for CycleInternal {
 //! #     type Message = usize;
 //! #     type Error = ();
 //! #     type Key = usize;
@@ -143,9 +143,9 @@
 //! let mut cycle = CrossbeamSystem::new();
 //!
 //! // Add agents
-//! cycle.add_agent(0, CycleInternal::new(true), None);
-//! cycle.add_agent(1, CycleInternal::new(false), None);
-//! cycle.add_agent(2, CycleInternal::new(false), None);
+//! cycle.add_actor(0, CycleInternal::new(true), None);
+//! cycle.add_actor(1, CycleInternal::new(false), None);
+//! cycle.add_actor(2, CycleInternal::new(false), None);
 //!
 //! // Add channels
 //! cycle.add_channel(&0, &1);
@@ -167,7 +167,7 @@ pub mod tokio;
 pub use crate::tokio::sync::TokioSystem;
 pub use synchronous::crossbeam::CrossbeamSystem;
 
-pub use internal::{AgentInternal, Instruction, Internal, NextState, Sender};
+pub use internal::{ActorInternal, Instruction, Internal, NextState, Sender};
 
 /// An interface defining properties of a system useful for setup
 ///
@@ -175,14 +175,14 @@ pub use internal::{AgentInternal, Instruction, Internal, NextState, Sender};
 /// that including async methods in trait is an unstable fearture in Rust.
 pub trait System: Sized {
     type Internal: Internal;
-    type AgentParameters;
+    type ActorParameters;
 
     /// Add a new agent to the system, with a given internal core and identifying key
-    fn add_agent(
+    fn add_actor(
         &mut self,
         key: <Self::Internal as Internal>::Key,
         internal: Self::Internal,
-        parameters: Option<Self::AgentParameters>,
+        parameters: Option<Self::ActorParameters>,
     );
 
     /// Add a channel between the agent identified with the key [`sender`] and [`reciever`]

@@ -1,4 +1,4 @@
-use crate::agents::*;
+use crate::actors::*;
 use rand::prelude::*;
 use std::collections::HashSet;
 use std::time::Duration;
@@ -109,7 +109,7 @@ impl<T: Clone> ProposerInternal<T> {
     }
 }
 
-impl<T: Clone + Send + Hash + Eq + Debug + 'static> AgentInternal for ProposerInternal<T> {
+impl<T: Clone + Send + Hash + Eq + Debug + 'static> ActorInternal for ProposerInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
     type Error = AgentInternalError;
@@ -165,7 +165,7 @@ fn new_time<T: Send + 'static + Clone + Eq + Debug + Hash>(
     internal: &mut ProposerInternal<T>,
     time: TimeStamp,
     tx: &mut Sender<AgentID, Message<T>>,
-) -> Result<NextState<Message<T>>, <LearnerInternal<T> as AgentInternal>::Error> {
+) -> Result<NextState<Message<T>>, <LearnerInternal<T> as ActorInternal>::Error> {
     internal.set_new_time(time).unwrap();
     let message = Message::NewTime(internal.time, internal.id);
 

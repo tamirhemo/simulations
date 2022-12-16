@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::agent_core::*;
+use super::actor_core::*;
 use super::channel::{Channels, SendError};
 use crate::internal::*;
 use std::fmt::Debug;

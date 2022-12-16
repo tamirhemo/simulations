@@ -132,26 +132,29 @@ impl<'a, K, T> Sender<'a, K, T> {
 /// The agent sends messages by invoking the send method of the sender. After every message recievied,
 /// the agent can perform some internal operations and then wait for the next message, or wait for a
 /// certain amount of time.
-pub trait AgentInternal: Send + 'static {
+pub trait ActorInternal: Send + 'static {
+    /// Messages that are sent between actors
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
+
+    /// The error type for an actor's internal system
     type Error: Send + Debug;
 
-    /// Get an incoming channel from the system to an agent with identifier given by Key.
+    /// Get an incoming channel from the system to an actor with identifier given by Key.
     ///
-    /// An agent may or may not wish to save incoming keys in its local memory in
+    /// An actor may or may not wish to save incoming keys in its local memory in
     /// order to be able to make sending instructions to the channel.
     fn new_incoming_key(&mut self, key: &Self::Key);
-    /// Get an outgoing channel from the system to an agent with identifier given by [`key`].
+    /// Get an outgoing channel from the system to an actor with identifier given by [`key`].
     ///
-    ///  An agent may or may not wish to save outgoing keys in its local memory in
+    ///  An actor may or may not wish to save outgoing keys in its local memory in
     /// order to be able to make sending instructions to the channel.
     fn new_outgoing_key(&mut self, key: &Self::Key);
 
-    /// Starting operations of the agent.
+    /// Starting operations of the actor.
     ///
     /// Usually used to make all the steps before needing to wait for messages. If the startup
-    /// exited succesfully, the agent can wait for a message using Get or GetTimeout.
+    /// exited succesfully, the actor can wait for a message using Get or GetTimeout.
     fn start(
         &mut self,
         tx: &mut Sender<Self::Key, Self::Message>,
@@ -159,7 +162,7 @@ pub trait AgentInternal: Send + 'static {
 
     /// Process a potential message
     ///
-    /// After sening a Get or GetTimeout commands, an agent will get Some(message)
+    /// After sening a Get or GetTimeout commands, an actor will get Some(message)
     /// if waited for a message and a None if either the timeout has elapsed or
     /// the channel has disconnected.
     fn process_message(
@@ -169,7 +172,7 @@ pub trait AgentInternal: Send + 'static {
     ) -> Result<NextState<Self::Message>, Self::Error>;
 }
 
-impl<T: AgentInternal> Internal for T {
+impl<T: ActorInternal> Internal for T {
     type Message = T::Message;
     type Key = T::Key;
     type Error = T::Error;

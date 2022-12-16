@@ -1,4 +1,4 @@
-use super::agents::CycleInternal;
+use super::actors::CycleInternal;
 use super::setup;
 use system::tokio::sync;
 use system::tokio::sync::AgentType;

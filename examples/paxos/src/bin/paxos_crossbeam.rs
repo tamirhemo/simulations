@@ -1,4 +1,4 @@
-use paxos::agents::*;
+use paxos::actors::*;
 use paxos::setup_paxos;
 use std::time::Duration;
 use system::tokio::sync::AgentType;

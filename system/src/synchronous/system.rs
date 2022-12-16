@@ -1,4 +1,4 @@
-use super::agent::Agent;
+use super::actor::Actor;
 use super::channel::{InChannel, OutChannels};
 use crate::internal::Internal;
 use crate::System;
@@ -10,18 +10,18 @@ use std::thread;
 
 #[derive(Debug, Clone)]
 pub struct SyncSystem<K, A> {
-    pub agents: HashMap<K, A>,
+    pub actors: HashMap<K, A>,
     pub terminals: HashSet<K>,
 }
 
 #[derive(Debug, Clone)]
 pub enum SystemError<A, S> {
-    AgentError(A),
+    ActorError(A),
     ThreadError(S),
 }
 
-/// An implementation that assumes keys match with agent identifiers.
-impl<I, K, T, S, R> SyncSystem<K, Agent<I, S, R>>
+/// An implementation that assumes keys match with Actor identifiers.
+impl<I, K, T, S, R> SyncSystem<K, Actor<I, S, R>>
 where
     I: Internal<Key = K, Message = T>,
     S: OutChannels<Key = K, Message = T>,
@@ -31,7 +31,7 @@ where
 {
     pub fn new() -> Self {
         SyncSystem {
-            agents: HashMap::new(),
+            actors: HashMap::new(),
             terminals: HashSet::new(),
         }
     }
@@ -46,8 +46,8 @@ where
         K: Eq + Hash + Copy,
     {
         let mut terminal_handles = HashMap::new();
-        for (key, mut agent) in self.agents {
-            let handle = thread::spawn(move || agent.run());
+        for (key, mut Actor) in self.actors {
+            let handle = thread::spawn(move || Actor.run());
 
             if self.terminals.contains(&key) {
                 terminal_handles.insert(key, handle);
@@ -73,7 +73,7 @@ impl<T, S, R> From<(T, S, R)> for SyncParameters {
     }
 }
 
-impl<I, K, T, S, R> System for SyncSystem<K, Agent<I, S, R>>
+impl<I, K, T, S, R> System for SyncSystem<K, Actor<I, S, R>>
 where
     K: Eq + Hash + Copy,
     I: Internal<Key = K, Message = T>,
@@ -83,24 +83,24 @@ where
     <I as Internal>::Error: std::fmt::Debug,
 {
     type Internal = I;
-    type AgentParameters = SyncParameters;
+    type ActorParameters = SyncParameters;
 
-    fn add_agent(&mut self, key: K, internal: I, _: Option<SyncParameters>)
+    fn add_actor(&mut self, key: K, internal: I, _: Option<SyncParameters>)
     where
         K: Eq + Hash,
     {
-        self.agents.insert(key, Agent::new(internal));
+        self.actors.insert(key, Actor::new(internal));
     }
 
     fn add_channel(&mut self, sender: &K, reciever: &K) {
-        let tx = self.agents.get(reciever).unwrap().in_channel.tx();
+        let tx = self.actors.get(reciever).unwrap().in_channel.tx();
 
-        self.agents.entry(*sender).and_modify(|s| {
+        self.actors.entry(*sender).and_modify(|s| {
             s.internal.new_outgoing_key(reciever);
             s.out_channels.insert(*reciever, tx);
         });
 
-        self.agents
+        self.actors
             .entry(*reciever)
             .and_modify(|a| a.internal.new_incoming_key(sender));
     }

@@ -4,10 +4,10 @@ use std::time::Duration;
 use system::tokio::sync::{AgentType, TokioSystem};
 use system::System;
 
-use crate::agents::acceptor::AcceptorInternal;
-use crate::agents::learner::LearnerInternal;
-use crate::agents::proposer::ProposerInternal;
-use crate::agents::*;
+use crate::actors::acceptor::AcceptorInternal;
+use crate::actors::learner::LearnerInternal;
+use crate::actors::proposer::ProposerInternal;
+use crate::actors::*;
 
 /// Setting up Paxos
 pub fn setup_paxos<S, T>(
@@ -20,7 +20,7 @@ pub fn setup_paxos<S, T>(
 where
     T: Clone + Eq + Hash + Debug + Send + 'static,
     S: System<Internal = PaxosInternal<T>>,
-    S::AgentParameters: From<(AgentType, usize, usize)>,
+    S::ActorParameters: From<(AgentType, usize, usize)>,
 {
     let buffer = 10000;
     let internal_buffer = 1000;
@@ -29,7 +29,7 @@ where
     // Initialize acceptors
     for i in 0..n_acceptors {
         let internal = PaxosInternal::Acceptor(AcceptorInternal::new(i));
-        system.add_agent(
+        system.add_actor(
             internal.id(),
             internal,
             Some((kind, buffer, internal_buffer).into()),
@@ -42,7 +42,7 @@ where
         let internal = PaxosInternal::Learner(LearnerInternal::new(i));
         let id = internal.id();
         system.add_terminal(id);
-        system.add_agent(id, internal, Some((kind, buffer, internal_buffer).into()));
+        system.add_actor(id, internal, Some((kind, buffer, internal_buffer).into()));
         system.add_terminal(id);
         for j in 0..n_acceptors {
             system.add_channel(&AgentID::Acceptor(j), &id);
@@ -54,7 +54,7 @@ where
     for (i, (val, range, timeout)) in proposer_initial_values.into_iter().enumerate() {
         let internal = PaxosInternal::Proposer(ProposerInternal::new(i, val, range, timeout));
         let id = internal.id();
-        system.add_agent(id, internal, Some((kind, buffer, internal_buffer).into()));
+        system.add_actor(id, internal, Some((kind, buffer, internal_buffer).into()));
         for j in 0..n_acceptors {
             //if j > n_acceptors/2 {break};
             system.add_channel(&AgentID::Acceptor(j), &id);

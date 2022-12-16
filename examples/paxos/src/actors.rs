@@ -1,13 +1,12 @@
 use crossbeam_channel as channel;
 use std::fmt::Debug;
 use std::hash::Hash;
-use system::{AgentInternal, NextState, Sender};
-use system_derive::AgentInternal;
+use system::{ActorInternal, NextState, Sender};
+use system_derive::ActorInternal;
 
 pub mod acceptor;
 pub mod learner;
 pub mod proposer;
-pub mod synchronous;
 //pub mod tokio_agents;
 
 pub type TimeStamp = u32;
@@ -63,7 +62,7 @@ pub enum AgentInternalError {
 }
 
 /// A Paxos Agnet
-#[derive(AgentInternal)]
+#[derive(ActorInternal)]
 pub enum PaxosInternal<T>
 where
     T: Send + Clone + 'static + Eq + Hash + PartialEq + Debug,

@@ -1,23 +1,23 @@
-mod agents;
+mod actors;
 mod test_synchronous;
 mod test_tokio;
 
-use agents::CycleInternal;
+use actors::CycleInternal;
 use system::tokio::sync::AgentType;
 use system::System;
 
 pub fn setup<S: System<Internal = CycleInternal>>(mut system: S, n: usize) -> S
 where
-    S::AgentParameters: From<(AgentType, usize, usize)>,
+    S::ActorParameters: From<(AgentType, usize, usize)>,
 {
-    system.add_agent(
+    system.add_actor(
         0,
         CycleInternal::new(true),
         Some((AgentType::Light, 2 * n, 2 * n).into()),
     );
 
     for i in 1..n {
-        system.add_agent(
+        system.add_actor(
             i,
             CycleInternal::new(false),
             Some((AgentType::Light, 2 * n, 2 * n).into()),

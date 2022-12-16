@@ -6,12 +6,12 @@
 //! Implementations via std::sync::mpsc and crossbeam_channel are given.
 //!
 
-pub mod agent;
+pub mod actor;
 pub mod channel;
 pub mod crossbeam;
 mod standard;
 pub mod system;
 
-pub use agent::Agent;
+pub use actor::Actor;
 pub use channel::{InChannel, OutChannels};
-pub use crossbeam::AgentCB;
+pub use crossbeam::ActorCB;

@@ -1,6 +1,6 @@
 # System
 
-An interace to generate simulations of distributed systems realized as a set of agents and a set of message-passing channels. The user only needs to write an implementation of each Agent's inner logic and a function that sets up the initial conditions. 
+An interace to generate simulations of distributed systems realized as actors passing messages along channels. The user only needs to write an implementation of each Agent's inner logic and a function that sets up the initial conditions. 
 
 Setting up the initial conditions is relatively simple using the system api and does not require any involvement in the inner workings. 
 

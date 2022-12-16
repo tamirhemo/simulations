@@ -24,10 +24,10 @@ fn match_arms(
     match_arms
 }
 
-/// Deriving AgentInternal for an enum of types implementing Internal
+/// Deriving ActorInternal for an enum of types implementing Internal
 ///
 /// This macto assumes Message, Key, Channel are joint for all the enum variants
-pub fn impl_agent_internal(ast: &syn::DeriveInput) -> TokenStream {
+pub fn impl_actor_internal(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
 
     let generics = &ast.generics.params;
@@ -61,11 +61,11 @@ pub fn impl_agent_internal(ast: &syn::DeriveInput) -> TokenStream {
     trypl.extend(vec![quote!(let x :u32 = 5; )]);
 
     let gen = quote! {
-        impl<#generics> AgentInternal for #name<#generics>
+        impl<#generics> ActorInternal for #name<#generics>
         #where_clause {
-            type Message = <#first_field as AgentInternal>::Message;
-            type Key = <#first_field as AgentInternal>::Key;
-            type Error = <#first_field as AgentInternal>::Error;
+            type Message = <#first_field as ActorInternal>::Message;
+            type Key = <#first_field as ActorInternal>::Key;
+            type Error = <#first_field as ActorInternal>::Error;
 
             fn new_outgoing_key(&mut self, key: &Self::Key) {
                 #trypl

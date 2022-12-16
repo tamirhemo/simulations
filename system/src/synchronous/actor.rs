@@ -2,28 +2,28 @@ use super::channel::{ChannelError, InChannel, OutChannels};
 use crate::internal::*;
 use std::time::Duration;
 
-/// A container for an agent.
+/// A container for an Actor.
 #[derive(Debug, Clone)]
-pub struct Agent<I, S, R> {
+pub struct Actor<I, S, R> {
     pub internal: I,
     pub in_channel: R,
     pub out_channels: S,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AgentError<N, T> {
+pub enum ActorError<N, T> {
     InternalError(N),
     ChannelError(ChannelError<T>),
     ExitedWithoutValue,
 }
 
-impl<I: Internal, S, R> Agent<I, S, R>
+impl<I: Internal, S, R> Actor<I, S, R>
 where
     S: OutChannels<Key = I::Key, Message = I::Message>,
     R: InChannel<Sender = S::Sender, Message = I::Message>,
 {
     pub fn new(internal: I) -> Self {
-        Agent {
+        Actor {
             internal,
             in_channel: <R as InChannel>::new(),
             out_channels: OutChannels::new(),
@@ -44,7 +44,7 @@ where
         &mut self,
         command: Instruction<I::Key, I::Message>,
         instructions: &mut I::Queue,
-    ) -> Result<Option<I::Message>, AgentError<I::Error, I::Message>> {
+    ) -> Result<Option<I::Message>, ActorError<I::Error, I::Message>> {
         match command {
             Instruction::Send(k, m) => {
                 self.out_channels.send(k, m).ok();
@@ -60,7 +60,7 @@ where
         Ok(None)
     }
 
-    pub fn run(&mut self) -> Result<I::Message, AgentError<I::Error, I::Message>> {
+    pub fn run(&mut self) -> Result<I::Message, ActorError<I::Error, I::Message>> {
         let mut instructions = self.internal.start();
         //assert!(!instructions.is_empty());
 
@@ -70,6 +70,6 @@ where
                 return Ok(val);
             }
         }
-        Err(AgentError::ExitedWithoutValue)
+        Err(ActorError::ExitedWithoutValue)
     }
 }

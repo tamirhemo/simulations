@@ -64,7 +64,7 @@ where
     }
 }
 
-impl<T: Clone + Eq + Send + Debug + 'static> AgentInternal for AcceptorInternal<T> {
+impl<T: Clone + Eq + Send + Debug + 'static> ActorInternal for AcceptorInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
     type Error = AgentInternalError;

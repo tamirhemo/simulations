@@ -1,4 +1,4 @@
-use crate::agents::*;
+use crate::actors::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
@@ -75,7 +75,7 @@ impl<T> LearnerInternal<T> {
     }
 }
 
-impl<T> AgentInternal for LearnerInternal<T>
+impl<T> ActorInternal for LearnerInternal<T>
 where
     T: Clone + Send + Eq + Hash + Debug + 'static,
 {

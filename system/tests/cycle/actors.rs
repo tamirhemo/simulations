@@ -1,6 +1,6 @@
 // An integration test for the message passing system
 
-use system::{AgentInternal, NextState, Sender};
+use system::{ActorInternal, NextState, Sender};
 
 #[derive(Debug)]
 pub struct CycleInternal {
@@ -19,7 +19,7 @@ impl CycleInternal {
     }
 }
 
-impl AgentInternal for CycleInternal {
+impl ActorInternal for CycleInternal {
     type Message = usize;
     type Error = ();
     type Key = usize;

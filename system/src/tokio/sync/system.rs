@@ -1,5 +1,5 @@
-use super::agent::*;
-use super::agent_core::{AgentCore, AgentType};
+use super::actor::*;
+use super::actor_core::{AgentCore, AgentType};
 use super::channel::Channels;
 use crate::internal::*;
 use crate::System;
@@ -105,13 +105,13 @@ impl From<(AgentType, usize, usize)> for Parameters {
 
 impl<I: Internal> System for TokioSystem<I> {
     type Internal = I;
-    type AgentParameters = Parameters;
+    type ActorParameters = Parameters;
 
     fn add_terminal(&mut self, key: I::Key) {
         self.terminals.insert(key);
     }
 
-    fn add_agent(&mut self, key: I::Key, internal: I, parameters: Option<Parameters>) {
+    fn add_actor(&mut self, key: I::Key, internal: I, parameters: Option<Parameters>) {
         let param = parameters.unwrap();
         let (kind, buffer, internal_buffer) = (
             param.kind,
