@@ -1,7 +1,7 @@
 use paxos::actors::*;
 use paxos::setup_paxos;
 use std::time::Duration;
-use system::tokio::sync::AgentType;
+use system::tokio::sync::ActorType;
 use system::CrossbeamSystem;
 
 #[tokio::main]
@@ -27,7 +27,7 @@ async fn main() {
         initial_values,
         num_of_acceptors,
         num_of_learners,
-        AgentType::Light,
+        ActorType::Light,
     );
     println!("Runnning...");
 
@@ -36,7 +36,7 @@ async fn main() {
         .unwrap()
         .into_values()
         .map(|m| match m {
-            Message::Terminated(_, val) => val,
+            Some(Message::Terminated(_, val)) => val,
             _ => String::from("No Yo"),
         })
         .collect();

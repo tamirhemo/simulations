@@ -1,26 +1,41 @@
-use super::system;
-use super::{actor, channel};
-use crate::internal::Internal;
-use channel::*;
+use super::actor::*;
+use super::channel::*;
+use super::system::SyncSystem;
+use crate::internal::*;
 use crossbeam_channel as cb;
 use std::collections::HashMap;
-use std::fmt;
+use std::fmt::Debug;
 use std::hash::Hash;
+use std::marker::PhantomData;
 
-type Channel<T> = (cb::Sender<T>, cb::Receiver<T>);
-pub type ActorCB<I, K, T> = actor::Actor<I, OutChannelsCB<K, T>, Channel<T>>;
-
-pub type CrossbeamSystem<I> = system::SyncSystem<
-    <I as Internal>::Key,
-    ActorCB<I, <I as Internal>::Key, <I as Internal>::Message>,
->;
+#[derive(Debug, Clone)]
+pub struct CrossbeamInterface<I: ActorInternal> {
+    _marker: PhantomData<I>,
+}
 
 #[derive(Debug, Clone)]
 pub struct OutChannelsCB<K, T> {
     pub ch_map: HashMap<K, cb::Sender<T>>,
 }
 
-impl<K: Eq + Hash, T: fmt::Debug> OutChannels for OutChannelsCB<K, T> {
+pub type CrossbeamSystem<I> = SyncSystem<CrossbeamInterface<I>>;
+
+impl<I: ActorInternal> ActorInterface for CrossbeamInterface<I> {
+    type Message = I::Message;
+    type Key = I::Key;
+    type Error = I::Error;
+    type Sender = cb::Sender<I::Message>;
+
+    type InChannel = (cb::Sender<I::Message>, cb::Receiver<I::Message>);
+    type OutChannels = OutChannelsCB<I::Key, I::Message>;
+    type Internal = I;
+}
+
+impl<K, T> OutChannels for OutChannelsCB<K, T>
+where
+    K: Debug + Eq + Hash + Copy + Send + 'static,
+    T: Debug + Clone + Send + 'static,
+{
     type Message = T;
     type Key = K;
     type Sender = cb::Sender<T>;
@@ -30,8 +45,12 @@ impl<K: Eq + Hash, T: fmt::Debug> OutChannels for OutChannelsCB<K, T> {
             ch_map: HashMap::new(),
         }
     }
-    fn send(&self, key: K, message: T) -> Result<(), channel::SendError<T>> {
-        Ok(self.ch_map.get(&key).unwrap().send(message)?)
+    
+    fn send(&self, key: &K, message: T) -> Result<(), SendError<(K, T)>> {
+        match self.ch_map.get(key).unwrap().send(message) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(SendError((*key, err.0))),
+        }
     }
     fn insert(&mut self, key: K, tx: cb::Sender<T>) -> Option<cb::Sender<T>> {
         self.ch_map.insert(key, tx)
@@ -41,13 +60,13 @@ impl<K: Eq + Hash, T: fmt::Debug> OutChannels for OutChannelsCB<K, T> {
     }
 }
 
-impl<T> From<cb::SendError<T>> for channel::SendError<T> {
+impl<T> From<cb::SendError<T>> for SendError<T> {
     fn from(err: cb::SendError<T>) -> Self {
-        channel::SendError(err.0)
+        SendError(err.0)
     }
 }
 
-impl<T> InChannel for (cb::Sender<T>, cb::Receiver<T>) {
+impl<T: Clone + Send> InChannel for (cb::Sender<T>, cb::Receiver<T>) {
     type Message = T;
     type Sender = cb::Sender<T>;
 
@@ -59,29 +78,11 @@ impl<T> InChannel for (cb::Sender<T>, cb::Receiver<T>) {
         self.0.clone()
     }
 
-    fn recv(&self) -> Result<Self::Message, channel::RecvError> {
-        Ok(self.1.recv()?)
+    fn recv(&self) -> Option<Self::Message> {
+        self.1.recv().ok()
     }
 
-    fn recv_timeout(
-        &self,
-        timeout: std::time::Duration,
-    ) -> Result<Self::Message, RecvTimeoutError> {
-        Ok(self.1.recv_timeout(timeout)?)
-    }
-}
-
-impl From<cb::RecvError> for RecvError {
-    fn from(_: cb::RecvError) -> Self {
-        RecvError {}
-    }
-}
-
-impl From<cb::RecvTimeoutError> for RecvTimeoutError {
-    fn from(err: cb::RecvTimeoutError) -> Self {
-        match err {
-            cb::RecvTimeoutError::Timeout => RecvTimeoutError::Timeout,
-            cb::RecvTimeoutError::Disconnected => RecvTimeoutError::Disconnected,
-        }
+    fn recv_timeout(&self, timeout: std::time::Duration) -> Option<Self::Message> {
+        self.1.recv_timeout(timeout).ok()
     }
 }

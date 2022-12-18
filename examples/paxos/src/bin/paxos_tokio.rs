@@ -1,7 +1,7 @@
 use paxos::actors::*;
 use paxos::setup_paxos;
 use std::time::Duration;
-use system::tokio::sync::{AgentType, TokioSystem};
+use system::tokio::sync::{ActorType, TokioSystem};
 
 #[tokio::main]
 async fn main() {
@@ -11,7 +11,7 @@ async fn main() {
     let modulus = 17;
     let timeout = Duration::from_secs(10);
     let rng_range = 50;
-    let kind = AgentType::Blocking;
+    let kind = ActorType::Blocking;
 
     let initial_values: Vec<(String, u32, Duration)> = (0..num_of_proposers)
         .map(|i| -> String {

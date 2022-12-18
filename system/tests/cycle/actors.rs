@@ -1,5 +1,6 @@
 // An integration test for the message passing system
 
+use system::internal::*;
 use system::{ActorInternal, NextState, Sender};
 
 #[derive(Debug)]
@@ -21,7 +22,7 @@ impl CycleInternal {
 
 impl ActorInternal for CycleInternal {
     type Message = usize;
-    type Error = ();
+    type Error = SendError<(usize, usize)>;
     type Key = usize;
 
     fn new_incoming_key(&mut self, key: &Self::Key) {
@@ -34,27 +35,27 @@ impl ActorInternal for CycleInternal {
         self.output_key = Some(*key);
     }
 
-    fn start(
+    fn start<T: Sender<Key = Self::Key, Message = Self::Message>>(
         &mut self,
-        tx: &mut Sender<Self::Key, Self::Message>,
+        tx: &mut T,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         if self.starter {
             let out = self.output_key.unwrap();
-            tx.send(out, 0).unwrap();
+            tx.send(&out, 0).unwrap();
         }
         Ok(NextState::Get)
     }
 
-    fn process_message(
+    fn process_message<T: Sender<Key = Self::Key, Message = Self::Message>>(
         &mut self,
         message: Option<Self::Message>,
-        tx: &mut Sender<Self::Key, Self::Message>,
+        tx: &mut T,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         assert!(message.is_some());
         let value = message.unwrap();
 
         let out = self.output_key.unwrap();
-        tx.send(out, value + 1).unwrap();
-        Ok(NextState::Terminate(value + 1))
+        tx.send(&out, value + 1).ok();
+        Ok(NextState::Terminate(Some(value + 1)))
     }
 }

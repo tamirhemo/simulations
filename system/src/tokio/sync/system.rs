@@ -1,5 +1,5 @@
 use super::actor::*;
-use super::actor_core::{AgentCore, AgentType};
+use super::actor_core::{ActorCore, ActorType, TokioInternal};
 use super::channel::Channels;
 use crate::internal::*;
 use crate::System;
@@ -8,10 +8,11 @@ use tokio;
 use tokio::sync::mpsc;
 
 use std::fmt::Debug;
+
 #[derive(Debug)]
-pub struct TokioSystem<I: Internal> {
+pub struct TokioSystem<I: TokioInternal> {
     //pub interfaces: HashMap<I::Key, Interface<I>>,
-    pub agents: HashMap<I::Key, Agent<I, Channels<I::Key, I::Message>>>,
+    pub agents: HashMap<I::Key, Actor<I, Channels<I::Key, I::Message>>>,
     pub terminals: HashSet<I::Key>,
     tx_term: mpsc::Sender<I::Message>,
     rx_term: mpsc::Receiver<I::Message>,
@@ -23,7 +24,7 @@ pub enum SystemError {
     ThreadError,
 }
 
-impl<I: Internal> TokioSystem<I> {
+impl<I: TokioInternal> TokioSystem<I> {
     pub fn new(terminals_size: usize) -> Self {
         let (tx, rx) = mpsc::channel(terminals_size);
         TokioSystem {
@@ -39,15 +40,15 @@ impl<I: Internal> TokioSystem<I> {
         for (key, agent) in self.agents {
             let (core, mut interface) = agent.split();
             match core {
-                AgentCore::Light(mut core) => {
+                ActorCore::Light(mut core) => {
                     tokio::spawn(async move { core.run().await.ok() });
                 }
-                AgentCore::Blocking(mut core) => {
+                ActorCore::Blocking(mut core) => {
                     tokio::task::spawn_blocking(move || {
                         core.run().ok();
                     });
                 }
-                AgentCore::Heavy(mut core) => {
+                ActorCore::Heavy(mut core) => {
                     std::thread::spawn(move || core.run().ok());
                 }
             }
@@ -76,13 +77,13 @@ impl<I: Internal> TokioSystem<I> {
 }
 
 pub struct Parameters {
-    pub kind: AgentType,
+    pub kind: ActorType,
     pub buffer: usize,
     pub internal_buffer: usize,
 }
 
 impl Parameters {
-    pub fn new(kind: AgentType, buffer: usize, internal_buffer: usize) -> Self {
+    pub fn new(kind: ActorType, buffer: usize, internal_buffer: usize) -> Self {
         Parameters {
             kind,
             buffer,
@@ -91,8 +92,8 @@ impl Parameters {
     }
 }
 
-impl From<(AgentType, usize, usize)> for Parameters {
-    fn from(para_tuple: (AgentType, usize, usize)) -> Self {
+impl From<(ActorType, usize, usize)> for Parameters {
+    fn from(para_tuple: (ActorType, usize, usize)) -> Self {
         let (kind, buffer, internal_buffer) = para_tuple;
 
         Parameters {
@@ -103,7 +104,7 @@ impl From<(AgentType, usize, usize)> for Parameters {
     }
 }
 
-impl<I: Internal> System for TokioSystem<I> {
+impl<I: ActorInternal> System for TokioSystem<I> {
     type Internal = I;
     type ActorParameters = Parameters;
 
@@ -113,12 +114,8 @@ impl<I: Internal> System for TokioSystem<I> {
 
     fn add_actor(&mut self, key: I::Key, internal: I, parameters: Option<Parameters>) {
         let param = parameters.unwrap();
-        let (kind, buffer, internal_buffer) = (
-            param.kind,
-            param.buffer,
-            param.internal_buffer,
-        );
-        let agent = Agent::new(internal, kind, buffer, internal_buffer);
+        let (kind, buffer, internal_buffer) = (param.kind, param.buffer, param.internal_buffer);
+        let agent = Actor::new(internal, kind, buffer, internal_buffer);
 
         self.agents.insert(key, agent);
     }

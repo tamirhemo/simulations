@@ -1,75 +1,65 @@
-use super::channel::{ChannelError, InChannel, OutChannels};
+use super::channel::{InChannel, OutChannels};
 use crate::internal::*;
-use std::time::Duration;
+use std::fmt::Debug;
+use std::hash::Hash;
+
+pub trait ActorInterface: Send + 'static {
+    type Message: Send + Clone + Debug + 'static;
+    type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
+    type Error: Send + From<<Self::Internal as ActorInternal>::Error> + Debug;
+    type Sender;
+
+    type InChannel: InChannel<Message = Self::Message, Sender = Self::Sender>;
+    type OutChannels: OutChannels<Key = Self::Key, Message = Self::Message, Sender = Self::Sender>;
+    type Internal: ActorInternal<Key = Self::Key, Message = Self::Message>;
+}
 
 /// A container for an Actor.
 #[derive(Debug, Clone)]
-pub struct Actor<I, S, R> {
-    pub internal: I,
-    pub in_channel: R,
-    pub out_channels: S,
+pub struct Actor<I: ActorInterface> {
+    pub internal: I::Internal,
+    pub in_channel: I::InChannel,
+    pub out_channels: I::OutChannels,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ActorError<N, T> {
-    InternalError(N),
-    ChannelError(ChannelError<T>),
-    ExitedWithoutValue,
-}
-
-impl<I: Internal, S, R> Actor<I, S, R>
-where
-    S: OutChannels<Key = I::Key, Message = I::Message>,
-    R: InChannel<Sender = S::Sender, Message = I::Message>,
-{
-    pub fn new(internal: I) -> Self {
+impl<I: ActorInterface> Actor<I> {
+    pub fn new(internal: I::Internal) -> Self {
         Actor {
             internal,
-            in_channel: <R as InChannel>::new(),
-            out_channels: OutChannels::new(),
+            in_channel: I::InChannel::new(),
+            out_channels: I::OutChannels::new(),
         }
     }
 
-    fn get(&mut self, instructions: &mut I::Queue, timeout: Option<Duration>) {
-        let msg = match timeout {
-            None => self.in_channel.recv().ok(),
-            Some(t) => self.in_channel.recv_timeout(t).ok(),
-        };
-        let mut current_instructions = self.internal.process_message(msg);
-
-        instructions.append(&mut current_instructions);
-    }
-
-    pub fn run_command(
+    fn act_next(
         &mut self,
-        command: Instruction<I::Key, I::Message>,
-        instructions: &mut I::Queue,
-    ) -> Result<Option<I::Message>, ActorError<I::Error, I::Message>> {
-        match command {
-            Instruction::Send(k, m) => {
-                self.out_channels.send(k, m).ok();
+        next_state: NextState<I::Message>,
+    ) -> Result<NextState<I::Message>, I::Error> {
+        match next_state {
+            NextState::Get => {
+                let message = self.in_channel.recv();
+                return Ok(self
+                    .internal
+                    .process_message(message, &mut self.out_channels)?);
             }
-
-            Instruction::Get => self.get(instructions, None),
-
-            Instruction::GetTimeout(t) => self.get(instructions, Some(t)),
-
-            Instruction::Terminate(val) => return Ok(Some(val)),
-        };
-
-        Ok(None)
+            NextState::GetTimeout(t) => {
+                let message = self.in_channel.recv_timeout(t);
+                return Ok(self
+                    .internal
+                    .process_message(message, &mut self.out_channels)?);
+            }
+            NextState::Terminate(m) => return Ok(NextState::Terminate(m)),
+        }
     }
 
-    pub fn run(&mut self) -> Result<I::Message, ActorError<I::Error, I::Message>> {
-        let mut instructions = self.internal.start();
-        //assert!(!instructions.is_empty());
+    pub fn run(&mut self) -> Result<Option<I::Message>, I::Error> {
+        let mut next_state = self.internal.start(&mut self.out_channels)?;
 
-        while let Some(command) = instructions.pop_front() {
-            let return_value = self.run_command(command, &mut instructions)?;
-            if let Some(val) = return_value {
-                return Ok(val);
+        loop {
+            if let NextState::Terminate(m) = next_state {
+                return Ok(m);
             }
+            next_state = self.act_next(next_state)?;
         }
-        Err(ActorError::ExitedWithoutValue)
     }
 }

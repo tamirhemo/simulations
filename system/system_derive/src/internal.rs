@@ -80,19 +80,19 @@ pub fn impl_actor_internal(ast: &syn::DeriveInput) -> TokenStream {
                 }
             }
 
-            fn start(
+            fn start<SenderGenericName: Sender<Key = Self::Key, Message = Self::Message>>(
                 &mut self,
-                tx: &mut Sender<Self::Key, Self::Message>,
+                tx: &mut SenderGenericName,
             ) -> Result<NextState<Self::Message>, Self::Error> {
                 match self {
                     #start_arms
                 }
             }
 
-            fn process_message(
+            fn process_message<SenderGenericName: Sender<Key = Self::Key, Message = Self::Message>>(
                 &mut self,
                 message: Option<Self::Message>,
-                tx: &mut Sender<Self::Key, Self::Message>,
+                tx: &mut SenderGenericName,
             ) -> Result<NextState<Self::Message>, Self::Error> {
                 match self {
                     #process_message_arms

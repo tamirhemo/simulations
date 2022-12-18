@@ -14,4 +14,3 @@ pub mod system;
 
 pub use actor::Actor;
 pub use channel::{InChannel, OutChannels};
-pub use crossbeam::ActorCB;

@@ -92,26 +92,26 @@ where
 
     fn new_outgoing_key(&mut self, _: &Self::Key) {}
 
-    fn start(
+    fn start<S: Sender<Key = AgentID, Message = Message<T>>>(
         &mut self,
-        tx: &mut Sender<Self::Key, Self::Message>,
+        tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         Ok(NextState::Get)
     }
 
-    fn process_message(
+    fn process_message<S: Sender<Key = AgentID, Message = Message<T>>>(
         &mut self,
         message: Option<Message<T>>,
-        tx: &mut Sender<Self::Key, Self::Message>,
+        tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         if let Some(msg) = message {
             self.parse_message(msg).unwrap();
         }
         if let Some(val) = &self.value {
-            return Ok(NextState::Terminate(Message::Terminated(
+            return Ok(NextState::Terminate(Some(Message::Terminated(
                 self.id,
                 val.clone(),
-            )));
+            ))));
         }
         Ok(NextState::Get)
     }

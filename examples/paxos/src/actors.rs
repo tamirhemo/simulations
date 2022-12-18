@@ -62,7 +62,7 @@ pub enum AgentInternalError {
 }
 
 /// A Paxos Agnet
-#[derive(ActorInternal)]
+#[derive(Debug, ActorInternal)]
 pub enum PaxosInternal<T>
 where
     T: Send + Clone + 'static + Eq + Hash + PartialEq + Debug,

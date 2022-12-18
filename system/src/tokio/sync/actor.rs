@@ -8,17 +8,17 @@ use tokio;
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
-pub struct Agent<I: Internal, C> {
-    core: AgentCore<I>,
+pub struct Actor<I: TokioInternal, C> {
+    core: ActorCore<I>,
     interface: AgentInterface<I, C>,
 }
 
-impl<I: Internal> Agent<I, Channels<I::Key, I::Message>> {
-    pub fn new(internal: I, kind: AgentType, buffer: usize, internal_buffer: usize) -> Self {
+impl<I: TokioInternal> Actor<I, Channels<I::Key, I::Message>> {
+    pub fn new(internal: I, kind: ActorType, buffer: usize, internal_buffer: usize) -> Self {
         let (tx, rx) = mpsc::channel(buffer);
         let (tx_inst, rx_inst) = mpsc::channel(internal_buffer);
-        Agent {
-            core: AgentCore::new(internal, kind, tx_inst, rx),
+        Actor {
+            core: ActorCore::new(internal, kind, tx_inst, rx),
             interface: AgentInterface::new(tx, rx_inst, buffer),
         }
     }
@@ -26,7 +26,7 @@ impl<I: Internal> Agent<I, Channels<I::Key, I::Message>> {
     pub fn split(
         self,
     ) -> (
-        AgentCore<I>,
+        ActorCore<I>,
         AgentInterface<I, Channels<I::Key, I::Message>>,
     ) {
         (self.core, self.interface)
@@ -54,7 +54,7 @@ impl<I: Internal> Agent<I, Channels<I::Key, I::Message>> {
 }
 
 #[derive(Debug)]
-pub struct AgentInterface<I: Internal, C> {
+pub struct AgentInterface<I: TokioInternal, C> {
     tx: mpsc::Sender<Option<I::Message>>,
     rx_inst: mpsc::Receiver<Instruction<I::Key, I::Message>>,
     pub channels: C,
@@ -62,30 +62,26 @@ pub struct AgentInterface<I: Internal, C> {
 }
 
 #[derive(Debug)]
-pub enum AgentError<I: Internal> {
-    InterfaceError(SyncCoreError<I>),
+pub enum AgentError<I: TokioInternal> {
+    InterfaceError(I::Error),
     SendError(SendError<I::Message>),
     ExitedWithoutValue,
 }
 
-impl<I: Internal> From<SendError<I::Message>> for AgentError<I> {
+impl<I: TokioInternal> From<SendError<I::Message>> for AgentError<I> {
     fn from(e: SendError<I::Message>) -> Self {
         AgentError::SendError(e)
     }
 }
 
-impl<I: Internal> From<SyncCoreError<I>> for AgentError<I> {
-    fn from(err: SyncCoreError<I>) -> Self {
-        AgentError::InterfaceError(err)
-    }
-}
-
 //pub type SyncAgent<I, K, T> = Agent<I, Option<T>, Instruction<K, T>, Channels<K, T>>;
 
-impl<I: Internal> AgentInterface<I, Channels<I::Key, I::Message>> {
+impl<I: TokioInternal> AgentInterface<I, Channels<I::Key, I::Message>> {
     pub fn new(
-        tx: mpsc::Sender<Option<<I as Internal>::Message>>,
-        rx_inst: mpsc::Receiver<Instruction<<I as Internal>::Key, <I as Internal>::Message>>,
+        tx: mpsc::Sender<Option<<I as TokioInternal>::Message>>,
+        rx_inst: mpsc::Receiver<
+            Instruction<<I as TokioInternal>::Key, <I as TokioInternal>::Message>,
+        >,
         buffer: usize,
     ) -> Self {
         AgentInterface {
@@ -117,7 +113,7 @@ impl<I: Internal> AgentInterface<I, Channels<I::Key, I::Message>> {
                     .flatten();
                 self.tx.send(message).await.ok();
             }
-            Instruction::Terminate(msg) => return Ok(Some(msg)),
+            Instruction::Terminate(msg) => return Ok(msg),
         };
         Ok(None)
     }

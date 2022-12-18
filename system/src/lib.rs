@@ -41,8 +41,8 @@
 //! To realize CycleInternal as an agent, we need to implement the [`ActorInternal`] trait.
 //!
 //! ```
-//! # use system::internal::*;
-//! # use system::synchronous::crossbeam::CrossbeamSystem;
+//! # use self::system::internal::*;
+//! # use self::system::synchronous::crossbeam::CrossbeamSystem;
 //! # #[derive(Debug)]
 //! # pub struct CycleInternal {
 //! #   // ID of input agent
@@ -67,21 +67,26 @@
 //!         self.output_key = Some(*key);
 //!     }
 //!
-//!    fn start(&mut self, tx: &mut Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+//!    fn start<S : Sender<Key = Self::Key, Message = Self::Message>>
+//!    (&mut self, tx: &mut S) 
+//!     -> Result<NextState<Self::Message>, Self::Error> {
 //!        if self.starter {
 //!            let out = self.output_key.unwrap();
-//!            tx.send(out, 0).unwrap();
+//!            tx.send(&out, 0).unwrap();
 //!        }
 //!        Ok(NextState::Get)
 //!    }
 //!
-//!    fn process_message(&mut self, message: Option<Self::Message>, tx: &mut  Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+//!    fn process_message<S : Sender<Key = Self::Key, Message = Self::Message>>
+//!     (&mut self, message: Option<Self::Message>, tx: &mut  S) 
+//!      -> Result<NextState<Self::Message>, Self::Error> {
 //!        assert!(message.is_some());
 //!        let value = message.unwrap();
 //!    
 //!        let out = self.output_key.unwrap();
-//!        tx.send(out, value+1).unwrap();
-//!        Ok(NextState::Terminate(value+1))
+//!        // we don't want to panick just because the next agent might be done already 
+//!        tx.send(&out, value+1).ok();
+//!        Ok(NextState::Terminate(Some(value+1)))
 //!    }
 //! }
 //!```
@@ -122,21 +127,23 @@
 //! #         self.output_key = Some(*key);
 //! #     }
 //! #
-//! #    fn start(&mut self, tx: &mut Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+//! #    fn start<S : Sender<Key = Self::Key, Message = Self::Message>>
+//! #     (&mut self, tx: &mut S) -> Result<NextState<Self::Message>, Self::Error> {
 //! #        if self.starter {
 //! #            let out = self.output_key.unwrap();
-//! #            tx.send(out, 0).unwrap();
+//! #            tx.send(&out, 0).ok();
 //! #        }
 //! #        Ok(NextState::Get)
 //! #    }
 //! #
-//! #   fn process_message(&mut self, message: Option<Self::Message>, tx: &mut  Sender<Self::Key, Self::Message>) -> Result<NextState<Self::Message>, Self::Error> {
+//! #   fn process_message<S : Sender<Key = Self::Key, Message = Self::Message>>
+//! #    (&mut self, message: Option<Self::Message>, tx: &mut  S) -> Result<NextState<Self::Message>, Self::Error> {
 //! #        assert!(message.is_some());
 //! #        let value = message.unwrap();
 //! #    
 //! #        let out = self.output_key.unwrap();
-//! #        tx.send(out, value+1).unwrap();
-//! #        Ok(NextState::Terminate(value+1))
+//! #        tx.send(&out, value+1).ok();
+//! #        Ok(NextState::Terminate(Some(value+1)))
 //! #    }
 //! # }
 //! #
@@ -156,7 +163,7 @@
 //! cycle.add_terminal(0);
 //!
 //! let values = cycle.run().unwrap();
-//! assert_eq!(values.get(&0), Some(&3));
+//! assert_eq!(values[&0], Some(3));
 //!```
 //!
 
@@ -164,23 +171,23 @@ pub mod internal;
 pub mod synchronous;
 pub mod tokio;
 
-pub use crate::tokio::sync::TokioSystem;
+//pub use crate::tokio::sync::TokioSystem;
 pub use synchronous::crossbeam::CrossbeamSystem;
 
-pub use internal::{ActorInternal, Instruction, Internal, NextState, Sender};
+pub use internal::{ActorInternal, NextState, Sender};
 
 /// An interface defining properties of a system useful for setup
 ///
 /// **Note**: The reason we did not abstract away some other properties of agents and systems in a trait is
 /// that including async methods in trait is an unstable fearture in Rust.
 pub trait System: Sized {
-    type Internal: Internal;
+    type Internal: ActorInternal;
     type ActorParameters;
 
     /// Add a new agent to the system, with a given internal core and identifying key
     fn add_actor(
         &mut self,
-        key: <Self::Internal as Internal>::Key,
+        key: <Self::Internal as ActorInternal>::Key,
         internal: Self::Internal,
         parameters: Option<Self::ActorParameters>,
     );
@@ -188,8 +195,8 @@ pub trait System: Sized {
     /// Add a channel between the agent identified with the key [`sender`] and [`reciever`]
     fn add_channel(
         &mut self,
-        sender: &<Self::Internal as Internal>::Key,
-        reciever: &<Self::Internal as Internal>::Key,
+        sender: &<Self::Internal as ActorInternal>::Key,
+        reciever: &<Self::Internal as ActorInternal>::Key,
     );
 
     /// Add an agent to the set of terminals
@@ -197,5 +204,5 @@ pub trait System: Sized {
     /// The system does not finish execusion until each of the agents in the set of terminals
     /// has been terminated. Once all the agents in the set of terminals is done executing,
     ///  an agent not in this set will be dropped regardless of whether it terminated or not.
-    fn add_terminal(&mut self, key: <Self::Internal as Internal>::Key);
+    fn add_terminal(&mut self, key: <Self::Internal as ActorInternal>::Key);
 }

@@ -123,9 +123,9 @@ impl<T: Clone + Send + Hash + Eq + Debug + 'static> ActorInternal for ProposerIn
 
     fn new_incoming_key(&mut self, _: &Self::Key) {}
 
-    fn start(
+    fn start<S: Sender<Key = AgentID, Message = Message<T>>>(
         &mut self,
-        tx: &mut Sender<Self::Key, Self::Message>,
+        tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         let mut rng = thread_rng();
         let time: u32 = rng.gen_range(0..self.rng_range);
@@ -133,17 +133,17 @@ impl<T: Clone + Send + Hash + Eq + Debug + 'static> ActorInternal for ProposerIn
         new_time(self, time, tx)
     }
 
-    fn process_message(
+    fn process_message<S: Sender<Key = AgentID, Message = Message<T>>>(
         &mut self,
         message: Option<Message<T>>,
-        tx: &mut Sender<Self::Key, Self::Message>,
+        tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         if let Some(msg) = message {
             if self.parse_message(msg).unwrap() {
                 let proposal = self.make_proposal();
 
                 for id in self.acceptors.iter() {
-                    tx.send(*id, proposal.clone()).unwrap();
+                    tx.send(id, proposal.clone()).ok();
                 }
             }
 
@@ -161,16 +161,19 @@ impl<T: Clone + Send + Hash + Eq + Debug + 'static> ActorInternal for ProposerIn
     }
 }
 
-fn new_time<T: Send + 'static + Clone + Eq + Debug + Hash>(
+fn new_time<
+    T: Send + 'static + Clone + Eq + Debug + Hash,
+    S: Sender<Key = AgentID, Message = Message<T>>,
+>(
     internal: &mut ProposerInternal<T>,
     time: TimeStamp,
-    tx: &mut Sender<AgentID, Message<T>>,
+    tx: &mut S,
 ) -> Result<NextState<Message<T>>, <LearnerInternal<T> as ActorInternal>::Error> {
     internal.set_new_time(time).unwrap();
     let message = Message::NewTime(internal.time, internal.id);
 
     for id in internal.acceptors.iter() {
-        tx.send(*id, message.clone()).unwrap();
+        tx.send(id, message.clone()).unwrap();
     }
 
     Ok(NextState::GetTimeout(internal.timeout))

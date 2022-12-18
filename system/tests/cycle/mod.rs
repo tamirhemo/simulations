@@ -3,24 +3,24 @@ mod test_synchronous;
 mod test_tokio;
 
 use actors::CycleInternal;
-use system::tokio::sync::AgentType;
+use system::tokio::sync::ActorType;
 use system::System;
 
 pub fn setup<S: System<Internal = CycleInternal>>(mut system: S, n: usize) -> S
 where
-    S::ActorParameters: From<(AgentType, usize, usize)>,
+    S::ActorParameters: From<(ActorType, usize, usize)>,
 {
     system.add_actor(
         0,
         CycleInternal::new(true),
-        Some((AgentType::Light, 2 * n, 2 * n).into()),
+        Some((ActorType::Light, 2 * n, 2 * n).into()),
     );
 
     for i in 1..n {
         system.add_actor(
             i,
             CycleInternal::new(false),
-            Some((AgentType::Light, 2 * n, 2 * n).into()),
+            Some((ActorType::Light, 2 * n, 2 * n).into()),
         );
         system.add_channel(&(i - 1), &i);
     }

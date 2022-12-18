@@ -1,7 +1,10 @@
+use crate::internal::*;
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::time::Duration;
 
 /// A generic interface for an Agent's incoming channel
-pub trait InChannel {
+pub trait InChannel: Clone + Send {
     type Message;
     type Sender;
 
@@ -10,17 +13,12 @@ pub trait InChannel {
     fn tx(&self) -> Self::Sender;
 
     /// Blocking current thread and wait for a message
-    fn recv(&self) -> Result<Self::Message, RecvError>;
+    fn recv(&self) -> Option<Self::Message>;
 
     /// Block thread to wait for message for a limited time
-    fn recv_timeout(&self, timeout: Duration) -> Result<Self::Message, RecvTimeoutError>;
+    fn recv_timeout(&self, timeout: Duration) -> Option<Self::Message>;
 }
 
-impl From<RecvError> for RecvTimeoutError {
-    fn from(_: RecvError) -> Self {
-        RecvTimeoutError::Disconnected
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChannelError<T> {
@@ -29,20 +27,21 @@ pub enum ChannelError<T> {
     RecvError,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub struct SendError<T>(pub T);
-
 /// A generic interface for the functionality of Agent's outgoing channels
-pub trait OutChannels {
-    type Message;
+pub trait OutChannels: Debug + Clone + Send + 'static {
+    type Message: Debug + Send + Clone + 'static;
+    type Key: Debug + Send + Clone + Copy + Hash + Eq + 'static;
     type Sender;
-    type Key;
 
     /// The empry interface without outgoing channels
     fn new() -> Self;
 
     /// Send a message in outgoing channel marked by key
-    fn send(&self, key: Self::Key, message: Self::Message) -> Result<(), SendError<Self::Message>>;
+    fn send(
+        &self,
+        key: &Self::Key,
+        message: Self::Message,
+    ) -> Result<(), SendError<(Self::Key, Self::Message)>>;
 
     /// Insert an outgoing channel
     ///
@@ -53,6 +52,19 @@ pub trait OutChannels {
     ///
     /// If no channel exists, returns none.
     fn remove(&mut self, key: Self::Key) -> Option<Self::Sender>;
+}
+
+impl<S: OutChannels> Sender for S {
+    type Key = S::Key;
+    type Message = S::Message;
+
+    fn send(
+        &mut self,
+        key: &Self::Key,
+        message: Self::Message,
+    ) -> Result<(), SendError<(Self::Key, Self::Message)>> {
+        OutChannels::send(self, key, message)
+    }
 }
 
 /// An error describing a closed channel
@@ -74,14 +86,3 @@ impl<T> From<SendError<T>> for ChannelError<T> {
     }
 }
 
-impl<T> From<RecvError> for ChannelError<T> {
-    fn from(_: RecvError) -> Self {
-        ChannelError::RecvError
-    }
-}
-
-impl<T> From<RecvTimeoutError> for ChannelError<T> {
-    fn from(err: RecvTimeoutError) -> Self {
-        ChannelError::RecvTimeoutError(err)
-    }
-}

@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::time::Duration;
-use system::tokio::sync::{AgentType, TokioSystem};
+use system::tokio::sync::{ActorType, TokioSystem};
 use system::System;
 
 use crate::actors::acceptor::AcceptorInternal;
@@ -15,12 +15,12 @@ pub fn setup_paxos<S, T>(
     proposer_initial_values: Vec<(T, TimeStamp, Duration)>,
     n_acceptors: usize,
     n_learners: usize,
-    kind: AgentType,
+    kind: ActorType,
 ) -> S
 where
     T: Clone + Eq + Hash + Debug + Send + 'static,
     S: System<Internal = PaxosInternal<T>>,
-    S::ActorParameters: From<(AgentType, usize, usize)>,
+    S::ActorParameters: From<(ActorType, usize, usize)>,
 {
     let buffer = 10000;
     let internal_buffer = 1000;
