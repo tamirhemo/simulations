@@ -117,9 +117,12 @@ where
     }
 }
 
+
 #[cfg(test)]
 mod tests {
+    use std::collections::VecDeque;
     use super::*;
+
     #[test]
     fn test_parse_message() {
         let mut internal: LearnerInternal<String> = LearnerInternal::new(0);
@@ -139,67 +142,23 @@ mod tests {
 
         assert_eq!(internal.value, Some(String::from("Hello")));
     }
-}
-
-/*
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_run() {
-        let internal: LearnerInternal<String> = LearnerInternal::new(0);
-        let mut learner = Learner::new(internal);
-        let tx = learner.in_channel.tx();
-
-        learner.internal.set_num_of_acceptors(4);
-
-        let id = { AgentID::Acceptor };
-        tx.send(Message::NewVote(id(0), 1, String::from("Hello")))
-            .unwrap();
-        tx.send(Message::NewVote(id(1), 1, String::from("Hello")))
-            .unwrap();
-        tx.send(Message::NewVote(id(2), 1, String::from("Hello")))
-            .unwrap();
-
-        learner.run().unwrap();
-        assert_eq!(learner.internal.value, Some(String::from("Hello")));
-    }
 
     #[test]
-    fn test_run_threaded() {
-        use std::thread;
-        use std::time::Duration;
+    fn test_parse_vote() {
+        let mut learner: LearnerInternal<String> = LearnerInternal::new(0);
+        learner.set_num_of_acceptors(4);
 
-        let n_acc = 10;
-        let internal: LearnerInternal<String> = LearnerInternal::new(0);
-        let mut learner = Learner::new(internal);
-        let tx = learner.in_channel.tx();
-
-        learner.internal.set_num_of_acceptors(4);
+        let mut instructions = VecDeque::new();
 
         let id = { AgentID::Acceptor };
 
-        let voters = n_acc;
+        learner.start(&mut instructions).unwrap();
+        learner.process_message(Some(Message::NewVote(id(0), 1, String::from("Hello"))), &mut instructions).unwrap();
+        learner.process_message(Some(Message::NewVote(id(1), 1, String::from("Hello"))), &mut instructions).unwrap();
+        learner.process_message(Some(Message::NewVote(id(2), 1, String::from("Hello"))), &mut instructions).unwrap();
 
-        let handle = thread::spawn(move || {
-            learner.run().unwrap();
-            learner.internal.value
-        });
-
-        for i in 0..voters {
-            let tx_current = tx.clone();
-            thread::spawn(move || {
-                thread::sleep(Duration::from_secs(1));
-                tx_current
-                    .send(Message::NewVote(id(i), 1, String::from("Hello")))
-                    .unwrap();
-            });
-        }
-        let value = handle.join().unwrap();
-
-        assert_eq!(value, Some(String::from("Hello")));
+        assert_eq!(learner.value, Some(String::from("Hello")));
     }
 }
 
-*/
+

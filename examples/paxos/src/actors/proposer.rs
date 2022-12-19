@@ -179,42 +179,32 @@ fn new_time<
     Ok(NextState::GetTimeout(internal.timeout))
 }
 
-/*
+
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::time::Duration;
+    use std::collections::VecDeque;
 
+    
     #[test]
     fn test_make_new_time() {}
 
     #[test]
     fn test_parse_updated_time() {
-        let internal = ProposerInternal::new(0, 5, 10, Duration::from_secs(1));
+        let mut proposer = ProposerInternal::new(0, 5, 10, Duration::from_secs(1));
 
-        let mut proposer = Proposer::new(internal);
-        let tx = proposer.in_channel.tx();
-
-        let (tx_acc, _) = channel::unbounded();
         let acc_id = AgentID::Acceptor(0);
-
-        proposer.internal.acceptors.insert(acc_id);
-        proposer.out_channels.insert(acc_id, tx_acc);
-
-        tx.send(Message::UpdatedTime(0, None, None, acc_id))
-            .unwrap();
-
         let mut instructions = VecDeque::new();
-        proposer
-            .run_command(Instruction::Get, &mut instructions)
-            .unwrap();
 
-        assert_eq!(proposer.internal.buffer.acc_votes.len(), 1);
-        //assert_eq!(proposer.internal.num_of_acceptors, 1);
+        proposer.acceptors.insert(acc_id);
+        proposer.process_message(Some(Message::UpdatedTime(0, None, None, acc_id)), &mut instructions).unwrap();
+
+        assert_eq!(proposer.buffer.acc_votes.len(), 1);
     }
 }
 
 
-*/
+

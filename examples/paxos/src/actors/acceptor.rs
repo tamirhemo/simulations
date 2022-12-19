@@ -118,22 +118,21 @@ impl<T: Clone + Eq + Send + Debug + 'static> ActorInternal for AcceptorInternal<
     }
 }
 
-/*
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::collections::VecDeque;
-    use system::{internal::Sender};
+    use system::internal::Instruction;
     #[test]
     fn test_parse_new_time() {
         let mut acceptor: AcceptorInternal<u32> = AcceptorInternal::new(0);
 
         let prop_id = AgentID::Proposer(0);
         let mut instructions = VecDeque::new();
-        let mut tx = Sender::new(&mut instructions);
 
         let next_state = acceptor
-            .process_message(Some(Message::NewTime(1, prop_id)), &mut tx)
+            .process_message(Some(Message::NewTime(1, prop_id)), &mut instructions)
             .unwrap();
 
         assert_eq!(acceptor.time, 1);
@@ -148,10 +147,9 @@ mod tests {
             Message::UpdatedTime(1, None, None, AgentID::Acceptor(0))
         );
 
-        let mut tx = Sender::new(&mut instructions);
 
         let next_state = acceptor
-            .process_message(Some(Message::NewTime(0, prop_id)), &mut tx)
+            .process_message(Some(Message::NewTime(0, prop_id)), &mut instructions)
             .unwrap();
         assert_eq!(acceptor.time, 1);
     }
@@ -161,7 +159,6 @@ mod tests {
         let mut acceptor = AcceptorInternal::new(0);
 
         let mut instructions = VecDeque::new();
-        let mut tx = Sender::new(&mut instructions);
 
         acceptor.new_outgoing_key(&AgentID::Learner(0));
         acceptor.new_incoming_key(&AgentID::Proposer(0));
@@ -171,7 +168,7 @@ mod tests {
         acceptor
             .process_message(
                 Some(Message::Proposal(1, vec![1, 2, 3], AgentID::Proposer(0))),
-                &mut tx,
+                &mut instructions,
             )
             .unwrap();
 
@@ -180,4 +177,4 @@ mod tests {
     }
 }
 
-*/
+
