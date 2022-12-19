@@ -1,55 +1,55 @@
 //! An interace to generate simulations of distributed systems
-//!realized as a set of agents and a set of message-passing channels.
-//! The user only needs to write an implementation of each Agent's inner logic
+//!realized as a set of actors and a set of message-passing channels.
+//! The user only needs to write an implementation of each actors's inner logic
 //! and a function that sets up the initial conditions.
 //!
-//! The internal logic of an agent is expressed by implementing the [`ActorInternal`] trait.
+//! The internal logic of an actors is expressed by implementing the [`ActorInternal`] trait.
 //! Systems are then built by instantiating a corresponding System struct.
 //!
 //! Currently there are two types of Systems avaialble:
-//! * [crossbeam::System](synchronous::crossbeam::System) - implementing agents as threads with message
+//! * [crossbeam::System](synchronous::crossbeam::System) - implements actors as threads with message
 //! passing between them.
 //!     * Simple to run and test.
-//!     * Has limitations of scale as each agent runs on a dedicated thread.
+//!     * Has limitations of scale as each actor runs on a dedicated thread.
 //!
-//! * [tokio::sync::System] - implementing agents using [tokio](https://tokio.rs) tasks and message passing.
-//!     * Easily run many agents in a single simulation.
-//!     * Users can specify different types of agents. For agents with internal operations that
+//! * [tokio::sync::System] - implementing actors using [tokio](https://tokio.rs) tasks and message passing.
+//!     * Easily run many actors in a single simulation.
+//!     * Users can specify different types of actors. For actors with internal operations that
 //!     are potentially computationally heavy, blocking threads are spawn.
 //!
 //!
 //! # Example
 //! We demonstrate the use of the library by implementing a system consisting of three
-//! agents passing a single message in a circle.
+//! actors passing a single message in a circle.
 //!
-//! One the agents (designated starter) will send the first message and wait to recive it back.
+//! One the actors (designated starter) will send the first message and wait to recive it back.
 //!
-//! First, we define an agent's internal structure:
+//! First, we define an actor's internal structure:
 //!
 //!```
 //! # #[derive(Debug)]
 //! pub struct CycleInternal {
-//!    // ID of input agent
+//!    // ID of input actor
 //!    input_key: Option<usize>,
-//!    // ID of output agent
+//!    // ID of output actor
 //!    output_key: Option<usize>,
-//!    // whether the agent is the starter or not.
+//!    // whether the actor is the starter or not.
 //!    starter : bool,
 //! }
 //!```
 //!
-//! To realize CycleInternal as an agent, we need to implement the [`ActorInternal`] trait.
+//! To realize CycleInternal as an actor, we need to implement the [`ActorInternal`] trait.
 //!
 //! ```
 //! # use self::system::internal::*;
 //! # use self::system::synchronous::crossbeam::CrossbeamSystem;
 //! # #[derive(Debug)]
 //! # pub struct CycleInternal {
-//! #   // ID of input agent
+//! #   // ID of input actor
 //! #  input_key: Option<usize>,
-//! #  // ID of output agent
+//! #  // ID of output actor
 //! #  output_key: Option<usize>,
-//! #  // whether the agent is the starter or not.
+//! #  // whether the actor is the starter or not.
 //! #  starter : bool,
 //! # }
 //! impl ActorInternal for CycleInternal {
@@ -84,7 +84,7 @@
 //!        let value = message.unwrap();
 //!    
 //!        let out = self.output_key.unwrap();
-//!        // we don't want to panick just because the next agent might be done already
+//!        // we don't want to panick just because the next actor might be done already
 //!        tx.send(&out, value+1).ok();
 //!        Ok(NextState::Terminate(Some(value+1)))
 //!    }
@@ -100,11 +100,11 @@
 //! # use system::System;
 //! # #[derive(Debug)]
 //! # pub struct CycleInternal {
-//! #   // ID of input agent
+//! #   // ID of input actor
 //! #  input_key: Option<usize>,
-//! #  // ID of output agent
+//! #  // ID of output actor
 //! #  output_key: Option<usize>,
-//! #  // whether the agent is the starter or not.
+//! #  // whether the actor is the starter or not.
 //! #  starter : bool,
 //! # }
 //! # impl CycleInternal {
@@ -149,7 +149,7 @@
 //! #
 //! let mut cycle = CrossbeamSystem::new();
 //!
-//! // Add agents
+//! // Add actors
 //! cycle.add_actor(0, CycleInternal::new(true), None);
 //! cycle.add_actor(1, CycleInternal::new(false), None);
 //! cycle.add_actor(2, CycleInternal::new(false), None);
@@ -159,7 +159,7 @@
 //! cycle.add_channel(&1, &2);
 //! cycle.add_channel(&2, &0);
 //!
-//! // Make agents 0 terminal
+//! // Make actors 0 terminal
 //! cycle.add_terminal(0);
 //!
 //! let values = cycle.run().unwrap();
@@ -178,13 +178,13 @@ pub use internal::{ActorInternal, NextState, Sender, SendError};
 
 /// An interface defining properties of a system useful for setup
 ///
-/// **Note**: The reason we did not abstract away some other properties of agents and systems in a trait is
+/// **Note**: The reason we did not abstract away some other properties of actors and systems in a trait is
 /// that including async methods in trait is an unstable fearture in Rust.
 pub trait System: Sized {
     type Internal: ActorInternal;
     type ActorParameters;
 
-    /// Add a new agent to the system, with a given internal core and identifying key
+    /// Add a new actors to the system, with a given internal core and identifying key
     fn add_actor(
         &mut self,
         key: <Self::Internal as ActorInternal>::Key,
@@ -192,17 +192,17 @@ pub trait System: Sized {
         parameters: Option<Self::ActorParameters>,
     );
 
-    /// Add a channel between the agent identified with the key [`sender`] and [`reciever`]
+    /// Add a channel between the actor identified with the key [`sender`] and [`reciever`]
     fn add_channel(
         &mut self,
         sender: &<Self::Internal as ActorInternal>::Key,
         reciever: &<Self::Internal as ActorInternal>::Key,
     );
 
-    /// Add an agent to the set of terminals
+    /// Add an actor to the set of terminals
     ///
-    /// The system does not finish execusion until each of the agents in the set of terminals
-    /// has been terminated. Once all the agents in the set of terminals is done executing,
-    ///  an agent not in this set will be dropped regardless of whether it terminated or not.
+    /// The system does not finish execusion until each of the actors in the set of terminals
+    /// has been terminated. Once all the actors in the set of terminals is done executing,
+    ///  an actor not in this set will be dropped regardless of whether it terminated or not.
     fn add_terminal(&mut self, key: <Self::Internal as ActorInternal>::Key);
 }

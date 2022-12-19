@@ -10,9 +10,9 @@ use tokio::sync::mpsc;
 /// 
 /// This is determined by the user and is used by the tokio based implementation to decide 
 /// where to place the internal operations within asynchronous code. The actor can be of the following types:
-/// # Light - the actor's internal code is not blocking and can be run within an asynchronous function.
-/// # Blocking - the actor's internal code is blocking but not cpu heavy so it can be places within tokio::spawn_blocking task.
-/// # Heavy - the actor internal code is performing cpu heavy operations. A dedicated std::thread will be spawned for performing the internal operations of the actor.
+/// * Light - the actor's internal code is not blocking and can be run within an asynchronous function.
+/// * Blocking - the actor's internal code is blocking but not cpu heavy so it can be places within tokio::spawn_blocking task.
+/// * Heavy - the actor internal code is performing cpu heavy operations. A dedicated std::thread will be spawned for performing the internal operations of the actor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ActorType {
     Light,
