@@ -81,7 +81,7 @@ where
 {
     type Message = Message<T>;
     type Key = AgentID;
-    type Error = AgentInternalError;
+    type Error = AgentError<T>;
 
     fn new_incoming_key(&mut self, key: &Self::Key) {
         match key {
@@ -94,7 +94,7 @@ where
 
     fn start<S: Sender<Key = AgentID, Message = Message<T>>>(
         &mut self,
-        tx: &mut S,
+        _tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         Ok(NextState::Get)
     }
@@ -102,10 +102,10 @@ where
     fn process_message<S: Sender<Key = AgentID, Message = Message<T>>>(
         &mut self,
         message: Option<Message<T>>,
-        tx: &mut S,
+        _tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         if let Some(msg) = message {
-            self.parse_message(msg).unwrap();
+            self.parse_message(msg)?;
         }
         if let Some(val) = &self.value {
             return Ok(NextState::Terminate(Some(Message::Terminated(

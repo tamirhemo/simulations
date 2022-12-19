@@ -45,7 +45,7 @@ where
             ch_map: HashMap::new(),
         }
     }
-    
+
     fn send(&self, key: &K, message: T) -> Result<(), SendError<(K, T)>> {
         match self.ch_map.get(key).unwrap().send(message) {
             Ok(_) => Ok(()),

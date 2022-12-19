@@ -37,20 +37,6 @@ pub trait Sender: Debug + Send + Clone + 'static {
     ) -> Result<(), SendError<(Self::Key, Self::Message)>>;
 }
 
-/*
-// for future use
-/// Sender interface for the agents messages
-pub trait AsyncSender {
-    /// Messages that are sent between actors
-    type Message: Send + Clone + Debug + 'static;
-    /// Identifier for an actor
-    ///
-    /// In the future, added possibly for a set of actors (currently not supported).
-    type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
-
-    async fn send(&self, key : &Self::Key, message: Self::Message) -> Result<(), SendError<(Self::Key, Self::Message)>>;
-}
-*/
 
 /// An interface for describing the internal operation of an agent.
 ///
@@ -70,7 +56,7 @@ pub trait ActorInternal: Debug + Send + 'static {
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
 
     /// The error type for an actor's internal system
-    type Error: Send + Debug;
+    type Error: Send + Debug + From<SendError<(Self::Key, Self::Message)>>;
 
     /// Get an incoming channel from the system to an actor with identifier given by Key.
     ///
@@ -103,6 +89,9 @@ pub trait ActorInternal: Debug + Send + 'static {
         tx: &mut T,
     ) -> Result<NextState<Self::Message>, Self::Error>;
 }
+
+
+
 
 /// Instructions that an agent's internal system can give its incoming-outgoing channel interface.
 ///  

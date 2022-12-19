@@ -1,7 +1,6 @@
-use crossbeam_channel as channel;
 use std::fmt::Debug;
 use std::hash::Hash;
-use system::{ActorInternal, NextState, Sender};
+use system::{ActorInternal, NextState, Sender, SendError};
 use system_derive::ActorInternal;
 
 pub mod acceptor;
@@ -43,22 +42,11 @@ impl AgentID {
 // Errors
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgentError<T> {
-    RecvError(channel::RecvError),
-    SendError(channel::SendError<Message<T>>),
+    SendError((AgentID, Message<T>)),
     WrongMessageType,
     NoConsensus,
     NoMessage,
-    TryRecvError,
     NoAcceptedTime,
-    RecvTimeoutError(channel::RecvTimeoutError),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AgentInternalError {
-    WrongMessageType,
-    NoMessage,
-    NoAcceptedTime,
-    NoConsensus,
 }
 
 /// A Paxos Agnet
@@ -85,6 +73,14 @@ where
     }
 }
 
+
+impl<T> From<SendError<(AgentID, Message<T>)>> for AgentError<T> {
+    fn from(err: SendError<(AgentID, Message<T>)>) -> Self {
+        AgentError::SendError(err.0)
+    }
+}
+
+/* 
 impl<T> From<channel::TryRecvError> for AgentError<T> {
     fn from(_: channel::TryRecvError) -> Self {
         AgentError::TryRecvError
@@ -108,3 +104,4 @@ impl<T> From<channel::RecvTimeoutError> for AgentError<T> {
         AgentError::RecvTimeoutError(err)
     }
 }
+*/

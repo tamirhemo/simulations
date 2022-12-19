@@ -67,7 +67,7 @@ where
 impl<T: Clone + Eq + Send + Debug + 'static> ActorInternal for AcceptorInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
-    type Error = AgentInternalError;
+    type Error = AgentError<T>;
 
     fn new_incoming_key(&mut self, _: &Self::Key) {}
 
@@ -95,7 +95,7 @@ impl<T: Clone + Eq + Send + Debug + 'static> ActorInternal for AcceptorInternal<
                 Message::NewTime(ts, id) => {
                     self.proposers.insert(id);
                     if let Some(m) = self.parse_new_time(ts) {
-                        tx.send(&id, m).unwrap();
+                        tx.send(&id, m)?;
                     }
                 }
 
@@ -109,7 +109,7 @@ impl<T: Clone + Eq + Send + Debug + 'static> ActorInternal for AcceptorInternal<
                         }
                     }
                 }
-                _ => (),
+                _ => return Err(AgentError::WrongMessageType),
             };
             Ok(NextState::Get)
         } else {

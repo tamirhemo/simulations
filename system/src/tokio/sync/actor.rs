@@ -7,6 +7,8 @@ use std::fmt::Debug;
 use tokio;
 use tokio::sync::mpsc;
 
+
+/// An actor for the tokio based implementation of the simulation.
 #[derive(Debug)]
 pub struct Actor<I: TokioInternal, C> {
     core: ActorCore<I>,
@@ -14,6 +16,9 @@ pub struct Actor<I: TokioInternal, C> {
 }
 
 impl<I: TokioInternal> Actor<I, Channels<I::Key, I::Message>> {
+    /// Creats a new actor for a tokio based implementaion from an internal instance. 
+    /// 
+    /// See [`ActorType`] for information about setting the kind variable. 
     pub fn new(internal: I, kind: ActorType, buffer: usize, internal_buffer: usize) -> Self {
         let (tx, rx) = mpsc::channel(buffer);
         let (tx_inst, rx_inst) = mpsc::channel(internal_buffer);

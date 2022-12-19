@@ -6,8 +6,8 @@ use system::tokio::sync::{ActorType, TokioSystem};
 #[tokio::main]
 async fn main() {
     let num_of_learners: usize = 10;
-    let num_of_acceptors: usize = 100;
-    let num_of_proposers: usize = 50;
+    let num_of_acceptors: usize = 20;
+    let num_of_proposers: usize = 30;
     let modulus = 17;
     let timeout = Duration::from_secs(10);
     let rng_range = 50;

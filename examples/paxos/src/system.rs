@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::time::Duration;
-use system::tokio::sync::{ActorType, TokioSystem};
+use system::tokio::sync::ActorType;
 use system::System;
 
 use crate::actors::acceptor::AcceptorInternal;

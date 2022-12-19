@@ -54,7 +54,7 @@
 //! # }
 //! impl ActorInternal for CycleInternal {
 //!     type Message = usize;
-//!     type Error = ();
+//!     type Error = SendError<(usize, usize)>;
 //!     type Key = usize;
 //!
 //!     fn new_incoming_key(&mut self, key: &Self::Key) {
@@ -68,7 +68,7 @@
 //!     }
 //!
 //!    fn start<S : Sender<Key = Self::Key, Message = Self::Message>>
-//!    (&mut self, tx: &mut S) 
+//!    (&mut self, tx: &mut S)
 //!     -> Result<NextState<Self::Message>, Self::Error> {
 //!        if self.starter {
 //!            let out = self.output_key.unwrap();
@@ -78,13 +78,13 @@
 //!    }
 //!
 //!    fn process_message<S : Sender<Key = Self::Key, Message = Self::Message>>
-//!     (&mut self, message: Option<Self::Message>, tx: &mut  S) 
+//!     (&mut self, message: Option<Self::Message>, tx: &mut  S)
 //!      -> Result<NextState<Self::Message>, Self::Error> {
 //!        assert!(message.is_some());
 //!        let value = message.unwrap();
 //!    
 //!        let out = self.output_key.unwrap();
-//!        // we don't want to panick just because the next agent might be done already 
+//!        // we don't want to panick just because the next agent might be done already
 //!        tx.send(&out, value+1).ok();
 //!        Ok(NextState::Terminate(Some(value+1)))
 //!    }
@@ -114,7 +114,7 @@
 //! #  }
 //! # impl ActorInternal for CycleInternal {
 //! #     type Message = usize;
-//! #     type Error = ();
+//! #     type Error = SendError<(usize, usize)>;
 //! #     type Key = usize;
 //! #
 //! #     fn new_incoming_key(&mut self, key: &Self::Key) {
@@ -174,7 +174,7 @@ pub mod tokio;
 //pub use crate::tokio::sync::TokioSystem;
 pub use synchronous::crossbeam::CrossbeamSystem;
 
-pub use internal::{ActorInternal, NextState, Sender};
+pub use internal::{ActorInternal, NextState, Sender, SendError};
 
 /// An interface defining properties of a system useful for setup
 ///

@@ -112,7 +112,7 @@ impl<T: Clone> ProposerInternal<T> {
 impl<T: Clone + Send + Hash + Eq + Debug + 'static> ActorInternal for ProposerInternal<T> {
     type Message = Message<T>;
     type Key = AgentID;
-    type Error = AgentInternalError;
+    type Error = AgentError<T>;
 
     fn new_outgoing_key(&mut self, key: &Self::Key) {
         match key {
@@ -139,7 +139,7 @@ impl<T: Clone + Send + Hash + Eq + Debug + 'static> ActorInternal for ProposerIn
         tx: &mut S,
     ) -> Result<NextState<Self::Message>, Self::Error> {
         if let Some(msg) = message {
-            if self.parse_message(msg).unwrap() {
+            if self.parse_message(msg)? {
                 let proposal = self.make_proposal();
 
                 for id in self.acceptors.iter() {

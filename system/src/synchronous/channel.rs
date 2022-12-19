@@ -19,7 +19,6 @@ pub trait InChannel: Clone + Send {
     fn recv_timeout(&self, timeout: Duration) -> Option<Self::Message>;
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChannelError<T> {
     SendError(T),
@@ -85,4 +84,3 @@ impl<T> From<SendError<T>> for ChannelError<T> {
         ChannelError::SendError(err.0)
     }
 }
-
