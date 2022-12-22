@@ -1,4 +1,4 @@
-//! A primitive for describing the internal logic of an actor in a distributed system.
+//! Primitives for describing the internal logic of an actor in a distributed system.
 //!
 //! To define an actor the user needs to implement the [`ActorInternal`] trait.
 //!
@@ -8,6 +8,8 @@ use std::hash::Hash;
 use std::time::Duration;
 
 /// Error returned by the Sender.
+/// 
+/// If a message failed to send, the error returns the message back. 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SendError<T>(pub T);
 
@@ -21,7 +23,10 @@ pub enum NextState<T> {
     Terminate(Option<T>),
 }
 
-/// Sender interface for the agents messages
+/// Sender interface for passing messages between actors. 
+/// 
+/// Each implementation of the system will instatitate its own sender. Users can also implement thier own
+/// senders. 
 pub trait Sender: Debug + Send + Clone + 'static {
     /// Messages that are sent between actors
     type Message: Send + Clone + Debug + 'static;

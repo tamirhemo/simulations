@@ -4,9 +4,9 @@
 //! and a function that sets up the initial conditions.
 //!
 //! The internal logic of an actors is expressed by implementing the [`ActorInternal`] trait.
-//! Systems are then built by instantiating a corresponding System struct.
+//! Systems are then built by instantiating a corresponding system.
 //!
-//! Currently there are two types of Systems avaialble:
+//! Currently there are two types of systems avaialble:
 //! * [crossbeam::System](synchronous::crossbeam::System) - implements actors as threads with message
 //! passing between them.
 //!     * Simple to run and test.
@@ -20,7 +20,10 @@
 //!
 //! # Example
 //! We demonstrate the use of the library by implementing a system consisting of three
-//! actors passing a single message in a circle.
+//! actors passing a single message containing a `usize` integer in a cycle. Each actor will read the
+//! value `m` and will transmit `m+1` to its outgoing channel. The execusion will end when the initial
+//! actor gets a message back, and they will then return the value, which corresponds to the length
+//! of the cycle.
 //!
 //! One the actors (designated starter) will send the first message and wait to recive it back.
 //!
@@ -176,7 +179,8 @@ pub use synchronous::crossbeam::CrossbeamSystem;
 
 pub use internal::{ActorInternal, NextState, Sender, SendError};
 
-/// An interface defining properties of a system useful for setup
+/// An interface defining methods of a system useful for set-up
+/// 
 ///
 /// **Note**: The reason we did not abstract away some other properties of actors and systems in a trait is
 /// that including async methods in trait is an unstable fearture in Rust.
