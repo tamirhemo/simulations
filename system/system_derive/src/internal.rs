@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-/// A function to automaticaly produce match arms for a method
+/// A function fo automaticaly producing match arms for a method
 fn match_arms(
     name: &syn::Ident,
     data_enum: &syn::DataEnum,

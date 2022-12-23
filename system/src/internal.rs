@@ -1,7 +1,7 @@
-//! Primitives for describing the internal logic of an actor in a distributed system.
+//! Primitives for describing the internal logic of an actor in a distributed system 
+//! To define an actor, it is enough to implement the [`ActorInternal`] trait.
 //!
-//! To define an actor the user needs to implement the [`ActorInternal`] trait.
-//!
+//! See the example in the main documentation. 
 
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -13,28 +13,33 @@ use std::time::Duration;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SendError<T>(pub T);
 
+
+/// The next state the actor can be in after doing a local operation. 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NextState<T> {
     /// Wait for a message.
     Get,
-    /// Wait for a message, but only up for the duration of timeout.
+    /// Wait for a message, but only for a certain duration of time.
     GetTimeout(Duration),
-    /// Return a termination message to be collected by the system.
+    /// Terminate, and return an optional termination message to be collected by the system.
     Terminate(Option<T>),
 }
 
 /// Sender interface for passing messages between actors. 
 /// 
-/// Each implementation of the system will instatitate its own sender. Users can also implement thier own
+/// Actors will implement their operations with respect to a generic sender. Each 
+/// implementation of the system will instatitate its own sender. Users can also implement thier own
 /// senders. 
 pub trait Sender: Debug + Send + Clone + 'static {
-    /// Messages that are sent between actors
+    /// The type of messages that are sent between actors
     type Message: Send + Clone + Debug + 'static;
+
     /// Identifier for an actor
     ///
     /// In the future, added possibly for a set of actors (currently not supported).
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
 
+    /// Send a message to the channel identified by [`key`].
     fn send(
         &mut self,
         key: &Self::Key,

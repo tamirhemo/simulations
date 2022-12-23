@@ -9,6 +9,7 @@ use tokio::sync::mpsc;
 
 use std::fmt::Debug;
 
+/// A system of actors using tokio threads. 
 #[derive(Debug)]
 pub struct TokioSystem<I: TokioInternal> {
     //pub interfaces: HashMap<I::Key, Interface<I>>,
@@ -17,6 +18,7 @@ pub struct TokioSystem<I: TokioInternal> {
     tx_term: mpsc::Sender<I::Message>,
     rx_term: mpsc::Receiver<I::Message>,
 }
+
 
 #[derive(Debug)]
 pub enum SystemError {
@@ -35,6 +37,7 @@ impl<I: TokioInternal> TokioSystem<I> {
         }
     }
 
+    /// Run the system, return the termination messages of all terminal agents. 
     pub async fn run(mut self) -> Result<Vec<I::Message>, SystemError> {
         // Spawn threads for agents
         for (key, agent) in self.agents {
@@ -61,10 +64,12 @@ impl<I: TokioInternal> TokioSystem<I> {
             tokio::spawn(async move { interface.run(tx).await });
         }
 
+        // Collect all the terminal messages
         let mut terminal_values = Vec::new();
         let terminals_size = self.terminals.len();
         let mut counter = 0;
 
+    
         while let Some(msg) = self.rx_term.recv().await {
             terminal_values.push(msg);
             counter += 1;
@@ -76,6 +81,7 @@ impl<I: TokioInternal> TokioSystem<I> {
     }
 }
 
+/// The parameters needed to initialize an agent. 
 pub struct Parameters {
     pub kind: ActorType,
     pub buffer: usize,

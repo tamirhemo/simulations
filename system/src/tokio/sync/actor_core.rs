@@ -8,8 +8,7 @@ use tokio::sync::mpsc;
 
 /// A type signifying the type of operations happening in the actor's internal code.
 /// 
-/// This is determined by the user and is used by the tokio based implementation to decide 
-/// where to place the internal operations within asynchronous code. The actor can be of the following types:
+/// The actor can be of the following types:
 /// * Light - the actor's internal code is not blocking and can be run within an asynchronous function.
 /// * Blocking - the actor's internal code is blocking but not cpu heavy so it can be places within tokio::spawn_blocking task.
 /// * Heavy - the actor internal code is performing cpu heavy operations. A dedicated std::thread will be spawned for performing the internal operations of the actor.
@@ -21,6 +20,8 @@ pub enum ActorType {
 }
 
 /// Functionalities of actor internal specialized to a system based on the tokio runtime
+/// 
+/// This trait can be used idependently from the [`ActorInternal`] trait. 
 pub trait TokioInternal: Send + 'static {
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
@@ -83,6 +84,10 @@ pub enum ActorCore<I: TokioInternal> {
 }
 
 
+/// Erros coming from an actor and its internal functions
+/// 
+/// An error can originate from the internal operation of an actor or from the interface 
+/// sending messages to the actor's interface. 
 #[derive(Debug)]
 pub enum CoreError<I: TokioInternal> {
     InternalError(I::Error),
@@ -282,6 +287,8 @@ impl<I: TokioInternal> LightCore<I> {
     }
 }
 
+
+
 impl<I: TokioInternal> HeavyCore<I> {
     fn new(
         internal: I,
@@ -294,6 +301,8 @@ impl<I: TokioInternal> HeavyCore<I> {
             tx_inst,
         }
     }
+
+    
     fn new_incoming_key(&mut self, key: &I::Key) {
         self.core.new_incoming_key(key)
     }
@@ -307,6 +316,7 @@ impl<I: TokioInternal> HeavyCore<I> {
             self.core.start_blocking(&mut self.tx_inst)
             .map_err(CoreError::from_internal)?;
         
+        // send instructions to the interface
         self.tx_inst.blocking_send(next_state.into())?;
         Ok(())
     }
@@ -317,6 +327,7 @@ impl<I: TokioInternal> HeavyCore<I> {
             .process_message_blocking(message, &mut self.tx_inst)
             .map_err(CoreError::from_internal)?;
 
+        // send instructions to the interface
         self.tx_inst.blocking_send(next_state.into())?;
         Ok(())
     }

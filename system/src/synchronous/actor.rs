@@ -3,6 +3,7 @@ use crate::internal::*;
 use std::fmt::Debug;
 use std::hash::Hash;
 
+
 pub trait ActorInterface: Send + 'static {
     type Message: Send + Clone + Debug + 'static;
     type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
