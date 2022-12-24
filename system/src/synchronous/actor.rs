@@ -32,6 +32,7 @@ impl<I: ActorInterface> Actor<I> {
         }
     }
 
+    /// Act with respect to a given next state 
     fn act_next(
         &mut self,
         next_state: NextState<I::Message>,

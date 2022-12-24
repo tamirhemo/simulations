@@ -28,6 +28,7 @@ impl<I: TokioInternal> Actor<I, Channels<I::Key, I::Message>> {
         }
     }
 
+    /// Split the actor into its core and interface.
     pub fn split(
         self,
     ) -> (
@@ -41,6 +42,7 @@ impl<I: TokioInternal> Actor<I, Channels<I::Key, I::Message>> {
         self.interface.channels.tx()
     }
 
+    /// Insert a new outgoing channel for the actor.
     pub fn insert_outgoing_channel(
         &mut self,
         key: I::Key,
@@ -58,6 +60,9 @@ impl<I: TokioInternal> Actor<I, Channels<I::Key, I::Message>> {
     }
 }
 
+/// The interface for an actor in the tokio based implementation.
+/// 
+/// This is the interface that is used to communicate with the actor. 
 #[derive(Debug)]
 pub struct AgentInterface<I: TokioInternal, C> {
     tx: mpsc::Sender<Option<I::Message>>,
@@ -98,7 +103,7 @@ impl<I: TokioInternal> AgentInterface<I, Channels<I::Key, I::Message>> {
         //Interface::new(internal, kind, tx_inst, rx),
     }
 
-    pub async fn run_command(
+    async fn run_command(
         &mut self,
         command: Instruction<I::Key, I::Message>,
     ) -> Result<Option<I::Message>, AgentError<I>> {
@@ -123,6 +128,7 @@ impl<I: TokioInternal> AgentInterface<I, Channels<I::Key, I::Message>> {
         Ok(None)
     }
 
+    /// Run the actor until it terminates.
     pub async fn run(
         &mut self,
         termination: Option<mpsc::Sender<I::Message>>,

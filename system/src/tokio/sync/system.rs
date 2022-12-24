@@ -42,6 +42,7 @@ impl<I: TokioInternal> TokioSystem<I> {
         // Spawn threads for agents
         for (key, agent) in self.agents {
             let (core, mut interface) = agent.split();
+            // Spawn a thread for each agent
             match core {
                 ActorCore::Light(mut core) => {
                     tokio::spawn(async move { core.run().await.ok() });
@@ -51,6 +52,7 @@ impl<I: TokioInternal> TokioSystem<I> {
                         core.run().ok();
                     });
                 }
+                // spawn a new thread for heavy actors
                 ActorCore::Heavy(mut core) => {
                     std::thread::spawn(move || core.run().ok());
                 }
@@ -70,6 +72,7 @@ impl<I: TokioInternal> TokioSystem<I> {
         let mut counter = 0;
 
     
+        // wait for all the terminal messages
         while let Some(msg) = self.rx_term.recv().await {
             terminal_values.push(msg);
             counter += 1;
