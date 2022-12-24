@@ -1,9 +1,6 @@
 //! An interface for synchronuous code message passing systems.
 //!
-//!
-//! The interface is based on a multiple-producer single consumer model for the channels.
-//!
-//! Implementations via std::sync::mpsc and crossbeam_channel are given.
+//! One concrete implementation is provided by the crossbeam_channel crate.
 //!
 
 pub mod actor;

@@ -4,18 +4,31 @@ use std::fmt::Debug;
 use std::hash::Hash;
 
 
+/// An interface for the Actor type.
+/// 
+/// This trait is used to define the methods that an actor must implement
+/// and various compatibilities that must be met, which are enforced by the trait bounds.
 pub trait ActorInterface: Send + 'static {
-    type Message: Send + Clone + Debug + 'static;
-    type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
-    type Error: Send + From<<Self::Internal as ActorInternal>::Error> + Debug;
-    type Sender;
 
+    /// The type of message that the actor will send and recieve.
+    type Message: Send + Clone + Debug + 'static;
+    /// The type of key that the actor will use to identify other actors.
+    type Key: Hash + Send + Copy + Debug + Eq + PartialEq;
+    /// The type of error that the actor may return.
+    type Error: Send + From<<Self::Internal as ActorInternal>::Error> + Debug;
+    /// The type of sender that the actor will use to send messages.
+    type Sender;
+    /// The type of channel that the actor will use to recieve messages.
     type InChannel: InChannel<Message = Self::Message, Sender = Self::Sender>;
+    /// The type of channels that the actor will use to send messages to other actors.
     type OutChannels: OutChannels<Key = Self::Key, Message = Self::Message, Sender = Self::Sender>;
+    /// The type defining the internal operations that the actor will perform.
     type Internal: ActorInternal<Key = Self::Key, Message = Self::Message>;
 }
 
 /// A container for an Actor.
+/// 
+/// The actors methods will usually be called by the system and not by the user. 
 #[derive(Debug, Clone)]
 pub struct Actor<I: ActorInterface> {
     pub internal: I::Internal,

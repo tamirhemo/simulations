@@ -6,11 +6,14 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::thread;
 
+
+/// A system of actors  
 pub struct SyncSystem<I: ActorInterface> {
-    pub actors: HashMap<I::Key, Actor<I>>,
-    pub terminals: HashSet<I::Key>,
+    actors: HashMap<I::Key, Actor<I>>,
+    terminals: HashSet<I::Key>,
 }
 
+/// An error that can occur when running a system.
 #[derive(Debug, Clone)]
 pub enum SystemError<I, S> {
     ActorError(I),
